@@ -6,6 +6,28 @@ import { useAppStore } from '@/lib/store';
 import { kanbanService } from '@/lib/services';
 import { X, Save, Trash2, Eye, Lock, Globe, Users, Palette, Bell, Shield, Settings } from 'lucide-react';
 
+interface BoardSettings {
+  title: string;
+  description: string;
+  visibility: 'private' | 'public';
+  allowComments: boolean;
+  allowInvites: boolean;
+  backgroundColor: string;
+  backgroundImage: string | null;
+  notifications: {
+    cardUpdates: boolean;
+    mentions: boolean;
+    dueDate: boolean;
+    newMembers: boolean;
+  };
+  permissions: {
+    allowMemberInvites: boolean;
+    allowCardDeletion: boolean;
+    allowListDeletion: boolean;
+    requireApproval: boolean;
+  };
+}
+
 interface SettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -15,7 +37,7 @@ interface SettingsModalProps {
 export default function SettingsModal({ isOpen, onClose, boardId }: SettingsModalProps) {
   const { updateKanbanBoard, removeKanbanBoard } = useAppStore();
   const [activeTab, setActiveTab] = useState('general');
-  const [boardSettings, setBoardSettings] = useState({
+  const [boardSettings, setBoardSettings] = useState<BoardSettings>({
     title: 'Main Project',
     description: 'Main project management board for team collaboration',
     visibility: 'private',
@@ -44,7 +66,7 @@ export default function SettingsModal({ isOpen, onClose, boardId }: SettingsModa
     '#EC4899', '#06B6D4', '#84CC16', '#F97316', '#6366F1'
   ];
 
-  const handleSettingChange = (key: string, value: any) => {
+  const handleSettingChange = (key: keyof BoardSettings, value: any) => {
     setBoardSettings(prev => ({
       ...prev,
       [key]: value
@@ -52,7 +74,11 @@ export default function SettingsModal({ isOpen, onClose, boardId }: SettingsModa
     setIsDirty(true);
   };
 
-  const handleNestedSettingChange = (category: string, key: string, value: any) => {
+  const handleNestedSettingChange = (
+    category: 'notifications' | 'permissions', 
+    key: string, 
+    value: any
+  ) => {
     setBoardSettings(prev => ({
       ...prev,
       [category]: {
