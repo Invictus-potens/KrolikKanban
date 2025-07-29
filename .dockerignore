@@ -39,11 +39,6 @@ next-env.d.ts
 .git
 .gitignore
 
-# Docker
-Dockerfile
-docker-compose.yml
-.dockerignore
-
 # Documentation
 README.md
 *.md

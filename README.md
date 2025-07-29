@@ -1,246 +1,187 @@
 # KrolikKanban
 
-Uma aplicação completa para gerenciamento de tarefas, notas e projetos com funcionalidades de Kanban, calendário e organização.
+Um sistema completo de gerenciamento de projetos com funcionalidades de Kanban, calendário, notas e muito mais.
 
-## 🚀 Funcionalidades
+## 🚀 Deploy no Railway
 
-- ✅ **Autenticação** - Login e registro de usuários
-- ✅ **Dashboard** - Visão geral das atividades
-- ✅ **Kanban Boards** - Gerenciamento de tarefas com drag & drop
-- ✅ **Notas** - Sistema completo de notas com pastas e tags
-- ✅ **Calendário** - Agendamento de eventos e lembretes
-- ✅ **Pastas** - Organização hierárquica de conteúdo
-- ✅ **Tags** - Sistema de etiquetas coloridas
-- ✅ **Row Level Security** - Segurança por usuário
-- ✅ **Interface Responsiva** - Design moderno e adaptável
+### Método Simples (Recomendado)
 
-## 🛠️ Tecnologias
+1. **Fork ou clone este repositório**
+2. **Conecte ao Railway**:
+   - Vá para [railway.app](https://railway.app)
+   - Clique em "New Project"
+   - Selecione "Deploy from GitHub repo"
+   - Escolha este repositório
 
-- **Frontend**: Next.js 15, React 19, TypeScript
-- **Styling**: Tailwind CSS
-- **Backend**: Supabase (PostgreSQL, Auth, RLS)
-- **State Management**: Zustand
-- **Drag & Drop**: @dnd-kit
-- **Icons**: Lucide React
-- **Deploy**: Docker, Docker Compose
+3. **Configure as variáveis de ambiente**:
+   - `NEXT_PUBLIC_SUPABASE_URL`: URL do seu projeto Supabase
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`: Chave anônima do Supabase
+   - `PORT`: Porta (geralmente 3000)
 
-## 📋 Pré-requisitos
+4. **Deploy automático**:
+   - O Railway detectará automaticamente que é um projeto Next.js
+   - Usará o Nixpacks para build e deploy
+   - O health check está configurado em `/api/health`
 
+### Configuração do Supabase
+
+1. **Crie um projeto no Supabase**
+2. **Execute o schema SQL**:
+   ```sql
+   -- Copie e execute o conteúdo de supabaseSchema.sql
+   ```
+3. **Configure as variáveis de ambiente** no Railway
+
+## 🛠️ Desenvolvimento Local
+
+### Pré-requisitos
 - Node.js 18+
-- Docker e Docker Compose
-- Conta no Supabase (gratuita)
+- npm 9+
 
-## 🚀 Instalação
-
-### 1. Clone o repositório
+### Instalação
 
 ```bash
-git clone https://github.com/seu-usuario/KrolikKanban.git
+# Clone o repositório
+git clone <seu-repo>
 cd KrolikKanban
-```
 
-### 2. Configure o Supabase
+# Instale as dependências
+npm install --legacy-peer-deps
 
-1. Crie uma conta em [supabase.com](https://supabase.com)
-2. Crie um novo projeto
-3. Vá para Settings > API e copie:
-   - Project URL
-   - anon/public key
+# Configure as variáveis de ambiente
+cp env.example .env
+# Edite o .env com suas configurações do Supabase
 
-### 3. Configure as variáveis de ambiente
-
-```bash
-cp .env.example .env.local
-```
-
-Edite o arquivo `.env.local`:
-
-```env
-NEXT_PUBLIC_SUPABASE_URL=sua_url_do_supabase
-NEXT_PUBLIC_SUPABASE_ANON_KEY=sua_chave_anonima_do_supabase
-```
-
-### 4. Configure o banco de dados
-
-1. Vá para o SQL Editor no Supabase
-2. Execute o conteúdo do arquivo `supabaseSchema.sql`
-3. Isso criará todas as tabelas e políticas RLS
-
-### 5. Instale as dependências
-
-```bash
-npm install
-```
-
-### 6. Execute em desenvolvimento
-
-```bash
+# Execute o projeto
 npm run dev
 ```
 
-Acesse [http://localhost:3000](http://localhost:3000)
-
-## 🐳 Deploy com Docker
-
-### Deploy Local
+### Scripts Disponíveis
 
 ```bash
-# Construir e executar com Docker Compose
-docker-compose up --build
+# Desenvolvimento
+npm run dev          # Inicia o servidor de desenvolvimento
+npm run build        # Build para produção
+npm run start        # Inicia o servidor de produção
+npm run lint         # Executa o linter
+npm run type-check   # Verifica tipos TypeScript
 
-# Acesse http://localhost
-```
-
-### Deploy em Produção
-
-1. Configure as variáveis de ambiente no servidor
-2. Execute:
-
-```bash
-# Construir a imagem
-docker build -t krolikkanban .
-
-# Executar o container
-docker run -d \
-  -p 3000:3000 \
-  -e NEXT_PUBLIC_SUPABASE_URL=sua_url \
-  -e NEXT_PUBLIC_SUPABASE_ANON_KEY=sua_chave \
-  --name krolikkanban \
-  krolikkanban
-```
-
-### Deploy com Docker Compose (Produção)
-
-```bash
-# Criar arquivo .env para produção
-cp .env.example .env
-
-# Editar variáveis de ambiente
-nano .env
-
-# Executar
-docker-compose -f docker-compose.yml up -d
+# Com Makefile
+make dev-all         # Setup completo e inicia desenvolvimento
+make prod-build      # Build para produção
 ```
 
 ## 📁 Estrutura do Projeto
 
 ```
 KrolikKanban/
-├── app/                    # Páginas Next.js
-│   ├── auth/              # Autenticação
-│   ├── calendar/          # Calendário
-│   ├── folders/           # Pastas
-│   ├── kanban/            # Boards Kanban
-│   ├── notes/             # Notas
-│   └── tags/              # Tags
+├── app/                    # App Router (Next.js 15)
+│   ├── api/               # API Routes
+│   ├── auth/              # Páginas de autenticação
+│   └── globals.css        # Estilos globais
 ├── components/             # Componentes React
 │   ├── auth/              # Componentes de autenticação
 │   ├── board/             # Componentes do Kanban
-│   └── layout/            # Layout e navegação
+│   └── layout/            # Componentes de layout
 ├── lib/                   # Utilitários e configurações
-│   ├── services.ts        # Serviços do banco de dados
+│   ├── supabase.ts        # Configuração do Supabase
 │   ├── store.ts           # Estado global (Zustand)
-│   └── supabase.ts        # Configuração do Supabase
-├── supabaseSchema.sql     # Schema do banco de dados
-├── Dockerfile             # Configuração Docker
-├── docker-compose.yml     # Orquestração Docker
-└── nginx.conf             # Configuração Nginx
+│   └── services.ts        # Serviços de API
+└── supabaseSchema.sql     # Schema do banco de dados
 ```
 
-## 🔧 Configuração do Banco de Dados
+## 🎯 Funcionalidades
 
-O arquivo `supabaseSchema.sql` contém:
+### ✅ Implementadas
+- **Autenticação** com Supabase Auth
+- **Kanban Boards** com drag & drop
+- **Cards** com prioridade, tags, responsável
+- **Colunas** organizáveis
+- **Dashboard** com resumo
+- **Layout responsivo** com Tailwind CSS
+- **TypeScript** para type safety
+- **Estado global** com Zustand
 
-- Tabelas para usuários, notas, eventos, boards, etc.
-- Políticas RLS (Row Level Security)
-- Índices para performance
-- Funções para atualização automática de timestamps
-- Triggers para criação automática de perfis
-
-## 🔐 Segurança
-
-- **Row Level Security (RLS)** - Usuários só veem seus próprios dados
-- **Autenticação Supabase** - Sistema robusto de auth
-- **Rate Limiting** - Proteção contra ataques
-- **Headers de Segurança** - Configurados no Nginx
-
-## 🎨 Interface
-
-- Design moderno e responsivo
-- Tema claro/escuro
-- Animações suaves
-- Drag & drop intuitivo
-- Notificações em tempo real
-
-## 📱 Funcionalidades Principais
-
-### Dashboard
-- Visão geral das atividades
-- Estatísticas em tempo real
-- Ações rápidas
-- Notas recentes e eventos do dia
-
-### Kanban
-- Boards personalizáveis
-- Colunas e cards arrastáveis
-- Prioridades e datas de vencimento
-- Atribuição de responsáveis
-
-### Notas
-- Editor rico
-- Organização por pastas
+### 🔄 Em Desenvolvimento
+- Calendário de eventos
+- Sistema de notas
+- Gerenciamento de pastas
 - Sistema de tags
-- Notas fixadas
-- Busca avançada
 
-### Calendário
-- Visualização mensal/semanal
-- Eventos coloridos
-- Lembretes configuráveis
-- Integração com notificações
+## 🛡️ Segurança
 
-## 🚀 Deploy em Produção
+- **Row Level Security (RLS)** configurado no Supabase
+- **Autenticação** obrigatória para todas as operações
+- **Validação** de dados no frontend e backend
+- **TypeScript** para prevenir erros de tipo
 
-### Vercel (Recomendado)
+## 📊 Monitoramento
 
-1. Conecte seu repositório ao Vercel
-2. Configure as variáveis de ambiente
-3. Deploy automático
+- **Health Check**: `/api/health`
+- **Logs**: Disponíveis no Railway Dashboard
+- **Métricas**: Monitoramento automático do Railway
 
-### Railway
+## 🔧 Configuração Avançada
 
-1. Conecte ao GitHub
-2. Configure as variáveis de ambiente
-3. Deploy automático
+### Variáveis de Ambiente
+
+```env
+# Supabase
+NEXT_PUBLIC_SUPABASE_URL=sua_url_do_supabase
+NEXT_PUBLIC_SUPABASE_ANON_KEY=sua_chave_anonima
+
+# Railway
+PORT=3000
+NODE_ENV=production
+```
+
+### Build e Deploy
+
+O projeto usa **Nixpacks** para build automático no Railway:
+
+1. **Detecção automática** do tipo de projeto
+2. **Instalação de dependências** com `npm install --legacy-peer-deps`
+3. **Build** com `npm run build`
+4. **Start** com `npm start`
+
+## 🚀 Deploy em Outras Plataformas
+
+### Vercel
+```bash
+vercel --prod
+```
+
+### Netlify
+```bash
+netlify deploy --prod
+```
 
 ### DigitalOcean App Platform
+```bash
+# Use o arquivo app.yaml
+```
 
-1. Conecte o repositório
-2. Configure as variáveis
-3. Deploy com SSL automático
+## 📝 Licença
+
+MIT License - veja o arquivo LICENSE para detalhes.
 
 ## 🤝 Contribuição
 
 1. Fork o projeto
-2. Crie uma branch para sua feature
-3. Commit suas mudanças
-4. Push para a branch
+2. Crie uma branch para sua feature (`git checkout -b feature/AmazingFeature`)
+3. Commit suas mudanças (`git commit -m 'Add some AmazingFeature'`)
+4. Push para a branch (`git push origin feature/AmazingFeature`)
 5. Abra um Pull Request
 
-## 📄 Licença
+## 📞 Suporte
 
-Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
+Se você encontrar algum problema ou tiver dúvidas:
 
-## 🆘 Suporte
+1. Verifique os logs no Railway Dashboard
+2. Teste localmente com `npm run dev`
+3. Verifique se todas as variáveis de ambiente estão configuradas
+4. Abra uma issue no GitHub
 
-- **Issues**: [GitHub Issues](https://github.com/seu-usuario/KrolikKanban/issues)
-- **Documentação**: [Wiki](https://github.com/seu-usuario/KrolikKanban/wiki)
-- **Email**: seu-email@exemplo.com
+---
 
-## 🙏 Agradecimentos
-
-- [Supabase](https://supabase.com) - Backend como serviço
-- [Next.js](https://nextjs.org) - Framework React
-- [Tailwind CSS](https://tailwindcss.com) - Framework CSS
-- [Lucide](https://lucide.dev) - Ícones
-- [Zustand](https://zustand-demo.pmnd.rs) - Gerenciamento de estado
+**KrolikKanban** - Organize seus projetos de forma eficiente! 🎯
