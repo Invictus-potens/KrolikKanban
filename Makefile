@@ -41,6 +41,13 @@ clean: ## Clean build artifacts
 docker-build: ## Build Docker image
 	docker build -t krolikkanban .
 
+docker-test: ## Test Docker build locally
+	docker-compose -f docker-compose.test.yml up --build -d
+	@echo "Testing Docker build..."
+	@sleep 10
+	@curl -f http://localhost:3000/api/health || echo "Health check failed"
+	@docker-compose -f docker-compose.test.yml down
+
 docker-run: ## Run Docker container
 	docker run -d \
 		--name krolikkanban \
