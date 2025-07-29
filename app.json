@@ -1,0 +1,41 @@
+{
+  "name": "KrolikKanban",
+  "description": "Uma aplicação completa para gerenciamento de tarefas, notas e projetos",
+  "repository": "https://github.com/your-username/KrolikKanban",
+  "logo": "https://node-js-sample.herokuapp.com/node.png",
+  "keywords": ["node", "express", "static", "nextjs", "react", "kanban"],
+  "env": {
+    "NEXT_PUBLIC_SUPABASE_URL": {
+      "description": "URL do seu projeto Supabase",
+      "required": true
+    },
+    "NEXT_PUBLIC_SUPABASE_ANON_KEY": {
+      "description": "Chave anônima do seu projeto Supabase",
+      "required": true
+    },
+    "NODE_ENV": {
+      "description": "Ambiente de execução",
+      "value": "production"
+    },
+    "NEXT_TELEMETRY_DISABLED": {
+      "description": "Desabilitar telemetria do Next.js",
+      "value": "1"
+    }
+  },
+  "formation": {
+    "web": {
+      "quantity": 1,
+      "size": "basic"
+    }
+  },
+  "buildpacks": [
+    {
+      "url": "heroku/nodejs"
+    }
+  ],
+  "addons": [
+    {
+      "plan": "heroku-postgresql:mini"
+    }
+  ]
+}

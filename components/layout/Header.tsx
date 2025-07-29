@@ -1,83 +1,89 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useStore } from '@/lib/store';
-import { signOut } from '@/lib/auth';
-import { Search, Moon, Sun, Bell, User, LogOut } from 'lucide-react';
+import { useState } from 'react';
+import { useAuth } from '@/components/auth/AuthProvider';
+import { useAppStore } from '@/lib/store';
+import { Menu, Search, Bell, User, LogOut, Settings } from 'lucide-react';
 
-export default function Header() {
-  const { user, theme, setTheme, searchQuery, setSearchQuery } = useStore();
-  const [showProfile, setShowProfile] = useState(false);
+export function Header() {
+  const { user, userProfile } = useAuth();
+  const { toggleSidebar, signOut } = useAppStore();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showUserMenu, setShowUserMenu] = useState(false);
 
   const handleSignOut = async () => {
     await signOut();
-    window.location.href = '/auth';
+    setShowUserMenu(false);
   };
 
-  const toggleTheme = () => {
-    setTheme(theme === 'dark' ? 'light' : 'dark');
-  };
+  if (!user) return null;
 
   return (
-    <header className={`fixed top-0 left-64 right-0 h-16 ${theme === 'dark' ? 'bg-slate-900' : 'bg-white'} border-b ${theme === 'dark' ? 'border-slate-800' : 'border-gray-200'} flex items-center justify-between px-6 z-40`}>
-      <div className="flex items-center gap-4 flex-1">
-        <div className="relative max-w-md flex-1">
-          <Search className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`} />
-          <input
-            type="text"
-            placeholder="Search cards, boards, and members..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className={`w-full pl-10 pr-4 py-2 rounded-lg ${theme === 'dark' ? 'bg-slate-800 text-white placeholder-gray-400' : 'bg-gray-100 text-gray-900 placeholder-gray-500'} border-none outline-none focus:ring-2 focus:ring-blue-500`}
-          />
-        </div>
-      </div>
-
-      <div className="flex items-center gap-4">
-        <button
-          onClick={toggleTheme}
-          className={`p-2 rounded-lg ${theme === 'dark' ? 'hover:bg-slate-800' : 'hover:bg-gray-100'}`}
-        >
-          {theme === 'dark' ? (
-            <Sun className="w-5 h-5 text-yellow-500" />
-          ) : (
-            <Moon className="w-5 h-5 text-gray-600" />
-          )}
-        </button>
-
-        <button className={`p-2 rounded-lg ${theme === 'dark' ? 'hover:bg-slate-800' : 'hover:bg-gray-100'}`}>
-          <Bell className={`w-5 h-5 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`} />
-        </button>
-
-        <div className="relative">
+    <header className="bg-white border-b border-gray-200 px-4 py-3">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-4">
           <button
-            onClick={() => setShowProfile(!showProfile)}
-            className={`flex items-center gap-2 p-2 rounded-lg ${theme === 'dark' ? 'hover:bg-slate-800' : 'hover:bg-gray-100'}`}
+            onClick={toggleSidebar}
+            className="p-2 rounded-md hover:bg-gray-100 transition-colors"
           >
-            <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
-              <User className="w-4 h-4 text-white" />
-            </div>
-            <span className={`text-sm font-medium ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-              {user?.user_metadata?.name || user?.email}
+            <Menu className="h-5 w-5 text-gray-600" />
+          </button>
+          
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Buscar..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-64"
+            />
+          </div>
+        </div>
+
+        <div className="flex items-center space-x-4">
+          <button className="p-2 rounded-md hover:bg-gray-100 transition-colors relative">
+            <Bell className="h-5 w-5 text-gray-600" />
+            <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
+              3
             </span>
           </button>
 
-          {showProfile && (
-            <div className={`absolute right-0 top-full mt-2 w-48 ${theme === 'dark' ? 'bg-slate-800' : 'bg-white'} rounded-lg shadow-lg border ${theme === 'dark' ? 'border-slate-700' : 'border-gray-200'} py-2`}>
-              <div className={`px-4 py-2 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'} border-b ${theme === 'dark' ? 'border-slate-700' : 'border-gray-200'}`}>
-                <div className="text-sm font-medium">{user?.user_metadata?.name}</div>
-                <div className="text-xs text-gray-500">{user?.email}</div>
+          <div className="relative">
+            <button
+              onClick={() => setShowUserMenu(!showUserMenu)}
+              className="flex items-center space-x-2 p-2 rounded-md hover:bg-gray-100 transition-colors"
+            >
+              <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+                <User className="h-4 w-4 text-white" />
               </div>
-              <button
-                onClick={handleSignOut}
-                className={`w-full flex items-center gap-2 px-4 py-2 text-left ${theme === 'dark' ? 'hover:bg-slate-700 text-gray-300' : 'hover:bg-gray-100 text-gray-700'}`}
-              >
-                <LogOut className="w-4 h-4" />
-                Sign Out
-              </button>
-            </div>
-          )}
+              <span className="text-sm font-medium text-gray-700">
+                {userProfile?.full_name || user.email}
+              </span>
+            </button>
+
+            {showUserMenu && (
+              <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 border border-gray-200">
+                <button className="flex items-center space-x-2 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                  <User className="h-4 w-4" />
+                  <span>Perfil</span>
+                </button>
+                <button className="flex items-center space-x-2 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                  <Settings className="h-4 w-4" />
+                  <span>Configurações</span>
+                </button>
+                <hr className="my-1" />
+                <button
+                  onClick={handleSignOut}
+                  className="flex items-center space-x-2 w-full px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
+                >
+                  <LogOut className="h-4 w-4" />
+                  <span>Sair</span>
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </header>

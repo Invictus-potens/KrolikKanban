@@ -1,0 +1,23 @@
+name: krolikkanban
+services:
+- name: web
+  source_dir: /
+  github:
+    repo: your-username/KrolikKanban
+    branch: main
+  run_command: npm start
+  build_command: npm run build
+  environment_slug: node-js
+  instance_count: 1
+  instance_size_slug: basic-xxs
+  routes:
+  - path: /
+  envs:
+  - key: NODE_ENV
+    value: production
+  - key: NEXT_PUBLIC_SUPABASE_URL
+    value: ${NEXT_PUBLIC_SUPABASE_URL}
+  - key: NEXT_PUBLIC_SUPABASE_ANON_KEY
+    value: ${NEXT_PUBLIC_SUPABASE_ANON_KEY}
+  - key: NEXT_TELEMETRY_DISABLED
+    value: "1"

@@ -14,211 +14,244 @@ export type Database = {
         Row: {
           id: string;
           email: string;
-          name: string;
-          avatar_url?: string;
-          theme: 'light' | 'dark';
+          full_name: string | null;
           created_at: string;
+          updated_at: string;
         };
         Insert: {
           id: string;
           email: string;
-          name: string;
-          avatar_url?: string;
-          theme?: 'light' | 'dark';
+          full_name?: string | null;
           created_at?: string;
+          updated_at?: string;
         };
         Update: {
           id?: string;
           email?: string;
-          name?: string;
-          avatar_url?: string;
-          theme?: 'light' | 'dark';
-          created_at?: string;
-        };
-      };
-      boards: {
-        Row: {
-          id: string;
-          title: string;
-          description?: string;
-          owner_id: string;
-          is_private: boolean;
-          background_color: string;
-          created_at: string;
-          updated_at: string;
-        };
-        Insert: {
-          id?: string;
-          title: string;
-          description?: string;
-          owner_id: string;
-          is_private?: boolean;
-          background_color?: string;
-          created_at?: string;
-          updated_at?: string;
-        };
-        Update: {
-          id?: string;
-          title?: string;
-          description?: string;
-          owner_id?: string;
-          is_private?: boolean;
-          background_color?: string;
+          full_name?: string | null;
           created_at?: string;
           updated_at?: string;
         };
       };
-      lists: {
-        Row: {
-          id: string;
-          title: string;
-          board_id: string;
-          position: number;
-          created_at: string;
-          updated_at: string;
-        };
-        Insert: {
-          id?: string;
-          title: string;
-          board_id: string;
-          position: number;
-          created_at?: string;
-          updated_at?: string;
-        };
-        Update: {
-          id?: string;
-          title?: string;
-          board_id?: string;
-          position?: number;
-          created_at?: string;
-          updated_at?: string;
-        };
-      };
-      cards: {
-        Row: {
-          id: string;
-          title: string;
-          description?: string;
-          list_id: string;
-          position: number;
-          due_date?: string;
-          assigned_user_id?: string;
-          created_at: string;
-          updated_at: string;
-        };
-        Insert: {
-          id?: string;
-          title: string;
-          description?: string;
-          list_id: string;
-          position: number;
-          due_date?: string;
-          assigned_user_id?: string;
-          created_at?: string;
-          updated_at?: string;
-        };
-        Update: {
-          id?: string;
-          title?: string;
-          description?: string;
-          list_id?: string;
-          position?: number;
-          due_date?: string;
-          assigned_user_id?: string;
-          created_at?: string;
-          updated_at?: string;
-        };
-      };
-      labels: {
+      folders: {
         Row: {
           id: string;
           name: string;
-          color: string;
-          board_id: string;
+          user_id: string;
           created_at: string;
+          updated_at: string;
         };
         Insert: {
           id?: string;
           name: string;
-          color: string;
-          board_id: string;
+          user_id: string;
           created_at?: string;
+          updated_at?: string;
         };
         Update: {
           id?: string;
           name?: string;
+          user_id?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      tags: {
+        Row: {
+          id: string;
+          name: string;
+          user_id: string;
+          color: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          user_id: string;
           color?: string;
-          board_id?: string;
           created_at?: string;
-        };
-      };
-      card_labels: {
-        Row: {
-          id: string;
-          card_id: string;
-          label_id: string;
-          created_at: string;
-        };
-        Insert: {
-          id?: string;
-          card_id: string;
-          label_id: string;
-          created_at?: string;
+          updated_at?: string;
         };
         Update: {
           id?: string;
-          card_id?: string;
-          label_id?: string;
+          name?: string;
+          user_id?: string;
+          color?: string;
           created_at?: string;
+          updated_at?: string;
         };
       };
-      card_comments: {
+      calendar_events: {
         Row: {
           id: string;
-          card_id: string;
           user_id: string;
-          content: string;
+          title: string;
+          description: string | null;
+          start_date: string;
+          end_date: string | null;
+          all_day: boolean;
+          color: string;
+          reminder_minutes: number | null;
+          reminder_set: boolean;
           created_at: string;
           updated_at: string;
         };
         Insert: {
           id?: string;
-          card_id: string;
           user_id: string;
-          content: string;
+          title: string;
+          description?: string | null;
+          start_date: string;
+          end_date?: string | null;
+          all_day?: boolean;
+          color?: string;
+          reminder_minutes?: number | null;
+          reminder_set?: boolean;
           created_at?: string;
           updated_at?: string;
         };
         Update: {
           id?: string;
-          card_id?: string;
           user_id?: string;
-          content?: string;
+          title?: string;
+          description?: string | null;
+          start_date?: string;
+          end_date?: string | null;
+          all_day?: boolean;
+          color?: string;
+          reminder_minutes?: number | null;
+          reminder_set?: boolean;
           created_at?: string;
           updated_at?: string;
         };
       };
-      board_members: {
+      notes: {
+        Row: {
+          id: string;
+          user_id: string;
+          title: string;
+          content: string;
+          folder: string | null;
+          tags: string[] | null;
+          is_pinned: boolean;
+          is_private: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          title: string;
+          content: string;
+          folder?: string | null;
+          tags?: string[] | null;
+          is_pinned?: boolean;
+          is_private?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          title?: string;
+          content?: string;
+          folder?: string | null;
+          tags?: string[] | null;
+          is_pinned?: boolean;
+          is_private?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      kanban_boards: {
+        Row: {
+          id: string;
+          user_id: string;
+          title: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          title: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          title?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      kanban_columns: {
         Row: {
           id: string;
           board_id: string;
-          user_id: string;
-          role: 'admin' | 'member' | 'viewer';
+          title: string;
+          order_index: number;
           created_at: string;
+          updated_at: string;
         };
         Insert: {
           id?: string;
           board_id: string;
-          user_id: string;
-          role: 'admin' | 'member' | 'viewer';
+          title: string;
+          order_index: number;
           created_at?: string;
+          updated_at?: string;
         };
         Update: {
           id?: string;
           board_id?: string;
-          user_id?: string;
-          role?: 'admin' | 'member' | 'viewer';
+          title?: string;
+          order_index?: number;
           created_at?: string;
+          updated_at?: string;
+        };
+      };
+      kanban_cards: {
+        Row: {
+          id: string;
+          column_id: string;
+          title: string;
+          description: string | null;
+          assignee: string | null;
+          priority: 'low' | 'medium' | 'high';
+          due_date: string | null;
+          tags: string[] | null;
+          order_index: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          column_id: string;
+          title: string;
+          description?: string | null;
+          assignee?: string | null;
+          priority?: 'low' | 'medium' | 'high';
+          due_date?: string | null;
+          tags?: string[] | null;
+          order_index: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          column_id?: string;
+          title?: string;
+          description?: string | null;
+          assignee?: string | null;
+          priority?: 'low' | 'medium' | 'high';
+          due_date?: string | null;
+          tags?: string[] | null;
+          order_index?: number;
+          created_at?: string;
+          updated_at?: string;
         };
       };
     };

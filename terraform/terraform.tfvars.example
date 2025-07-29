@@ -1,0 +1,14 @@
+# AWS Configuration
+aws_region = "us-east-1"
+project_name = "krolikkanban"
+
+# ECR Repository
+ecr_repository_url = "123456789012.dkr.ecr.us-east-1.amazonaws.com/krolikkanban"
+
+# Supabase Configuration
+supabase_url = "https://your-project.supabase.co"
+supabase_anon_key = "your-supabase-anon-key"
+
+# Domain Configuration (optional)
+domain_name = "krolikkanban.example.com"
+route53_zone_id = "Z1234567890ABC"

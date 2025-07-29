@@ -1,0 +1,12 @@
+name = "krolikkanban"
+compatibility_date = "2024-01-01"
+compatibility_flags = ["nodejs_compat"]
+
+[env.production]
+name = "krolikkanban-prod"
+
+[env.staging]
+name = "krolikkanban-staging"
+
+[build]
+command = "npm run build"
