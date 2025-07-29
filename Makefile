@@ -9,7 +9,15 @@ help: ## Show this help message
 
 # Development
 install: ## Install dependencies
-	npm install
+	npm install --legacy-peer-deps
+
+lockfile: ## Generate package-lock.json
+	@echo "Generating package-lock.json..."
+	@if [ -f "package-lock.json" ]; then \
+		rm package-lock.json; \
+	fi
+	npm install --legacy-peer-deps
+	@echo "✅ package-lock.json generated successfully!"
 
 dev: ## Start development server
 	npm run dev
