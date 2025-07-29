@@ -1,183 +1,170 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { useState } from 'react';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { useAppStore } from '@/lib/store';
 import { 
-  Home, 
-  FolderOpen, 
-  StickyNote, 
-  Calendar, 
+  Folder, 
   Kanban, 
+  Calendar, 
+  FileText, 
   Tag, 
-  Plus,
+  Settings,
   ChevronDown,
-  ChevronRight
+  Plus
 } from 'lucide-react';
 
-const navigation = [
-  { name: 'Dashboard', href: '/', icon: Home },
-  { name: 'Kanban', href: '/kanban', icon: Kanban },
-  { name: 'Notas', href: '/notes', icon: StickyNote },
-  { name: 'Calendário', href: '/calendar', icon: Calendar },
-  { name: 'Pastas', href: '/folders', icon: FolderOpen },
-  { name: 'Tags', href: '/tags', icon: Tag },
-];
-
 export function Sidebar() {
-  const pathname = usePathname();
   const { user } = useAuth();
-  const { isSidebarOpen, folders, kanbanBoards } = useAppStore();
-  const [expandedFolders, setExpandedFolders] = useState(false);
-  const [expandedBoards, setExpandedBoards] = useState(false);
+  const { isSidebarOpen, selectedBoard, setSelectedBoard } = useAppStore();
+  const [expandedFolders, setExpandedFolders] = useState(true);
+  const [expandedBoards, setExpandedBoards] = useState(true);
 
   if (!user) return null;
 
+  const navigationItems = [
+    {
+      title: 'Dashboard',
+      icon: <Kanban className="w-5 h-5" />,
+      href: '/',
+      count: null
+    },
+    {
+      title: 'Kanban',
+      icon: <Kanban className="w-5 h-5" />,
+      href: '/kanban',
+      count: 3
+    },
+    {
+      title: 'Calendário',
+      icon: <Calendar className="w-5 h-5" />,
+      href: '/calendar',
+      count: 5
+    },
+    {
+      title: 'Notas',
+      icon: <FileText className="w-5 h-5" />,
+      href: '/notes',
+      count: 12
+    },
+    {
+      title: 'Tags',
+      icon: <Tag className="w-5 h-5" />,
+      href: '/tags',
+      count: 8
+    },
+    {
+      title: 'Configurações',
+      icon: <Settings className="w-5 h-5" />,
+      href: '/settings',
+      count: null
+    }
+  ];
+
+  const folders = [
+    { id: '1', name: 'Todas as Notas', count: 2 },
+    { id: '2', name: 'teste', count: 0 }
+  ];
+
+  const boards = [
+    { id: '1', name: 'Projeto Principal', count: 5 },
+    { id: '2', name: 'Backlog', count: 3 },
+    { id: '3', name: 'Em Progresso', count: 2 }
+  ];
+
+  if (!isSidebarOpen) return null;
+
   return (
-    <aside className={`${isSidebarOpen ? 'w-64' : 'w-16'} bg-white border-r border-gray-200 transition-all duration-300 flex flex-col`}>
-      <div className="flex-1 overflow-y-auto">
-        {/* Logo */}
-        <div className="p-4 border-b border-gray-200">
-          <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">K</span>
-            </div>
-            {isSidebarOpen && (
-              <span className="text-lg font-semibold text-gray-900">KrolikKanban</span>
-            )}
-          </div>
-        </div>
-
-        {/* Navigation */}
-        <nav className="p-4 space-y-2">
-          {navigation.map((item) => {
-            const isActive = pathname === item.href;
-            return (
-              <Link
-                key={item.name}
-                href={item.href}
-                className={`flex items-center space-x-3 px-3 py-2 rounded-md transition-colors ${
-                  isActive
-                    ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-700'
-                    : 'text-gray-700 hover:bg-gray-50'
-                }`}
-              >
-                <item.icon className="h-5 w-5" />
-                {isSidebarOpen && (
-                  <span className="text-sm font-medium">{item.name}</span>
-                )}
-              </Link>
-            );
-          })}
-        </nav>
-
-        {/* Quick Actions */}
-        {isSidebarOpen && (
-          <div className="px-4 py-2">
-            <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
-              Ações Rápidas
-            </h3>
-            <div className="space-y-1">
-              <button className="flex items-center space-x-3 w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md transition-colors">
-                <Plus className="h-4 w-4" />
-                <span>Nova Nota</span>
-              </button>
-              <button className="flex items-center space-x-3 w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md transition-colors">
-                <Plus className="h-4 w-4" />
-                <span>Novo Board</span>
-              </button>
-              <button className="flex items-center space-x-3 w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md transition-colors">
-                <Plus className="h-4 w-4" />
-                <span>Novo Evento</span>
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Folders Section */}
-        {isSidebarOpen && folders.length > 0 && (
-          <div className="px-4 py-2">
-            <button
-              onClick={() => setExpandedFolders(!expandedFolders)}
-              className="flex items-center justify-between w-full px-3 py-2 text-sm font-semibold text-gray-500 uppercase tracking-wider hover:bg-gray-50 rounded-md transition-colors"
-            >
-              <span>Pastas</span>
-              {expandedFolders ? (
-                <ChevronDown className="h-4 w-4" />
-              ) : (
-                <ChevronRight className="h-4 w-4" />
-              )}
-            </button>
-            {expandedFolders && (
-              <div className="mt-2 space-y-1">
-                {folders.map((folder) => (
-                  <Link
-                    key={folder.id}
-                    href={`/folders/${folder.id}`}
-                    className="flex items-center space-x-3 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md transition-colors"
-                  >
-                    <FolderOpen className="h-4 w-4" />
-                    <span>{folder.name}</span>
-                  </Link>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Boards Section */}
-        {isSidebarOpen && kanbanBoards.length > 0 && (
-          <div className="px-4 py-2">
-            <button
-              onClick={() => setExpandedBoards(!expandedBoards)}
-              className="flex items-center justify-between w-full px-3 py-2 text-sm font-semibold text-gray-500 uppercase tracking-wider hover:bg-gray-50 rounded-md transition-colors"
-            >
-              <span>Boards</span>
-              {expandedBoards ? (
-                <ChevronDown className="h-4 w-4" />
-              ) : (
-                <ChevronRight className="h-4 w-4" />
-              )}
-            </button>
-            {expandedBoards && (
-              <div className="mt-2 space-y-1">
-                {kanbanBoards.map((board) => (
-                  <Link
-                    key={board.id}
-                    href={`/kanban/${board.id}`}
-                    className="flex items-center space-x-3 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md transition-colors"
-                  >
-                    <Kanban className="h-4 w-4" />
-                    <span>{board.title}</span>
-                  </Link>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
+    <aside className="w-64 bg-surface border-r border-border flex flex-col h-full">
+      {/* Header */}
+      <div className="p-6 border-b border-border">
+        <h2 className="text-lg font-semibold text-textPrimary">KrolikKanban</h2>
       </div>
 
-      {/* User Info */}
-      {isSidebarOpen && (
-        <div className="p-4 border-t border-gray-200">
-          <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
-              <span className="text-white text-sm font-medium">
-                {user.email?.charAt(0).toUpperCase()}
+      {/* Navigation */}
+      <nav className="flex-1 p-4 space-y-2">
+        {navigationItems.map((item) => (
+          <a
+            key={item.href}
+            href={item.href}
+            className="flex items-center justify-between px-3 py-2 text-textSecondary hover:text-textPrimary hover:bg-surfaceHover rounded-md transition-colors group"
+          >
+            <div className="flex items-center gap-3">
+              {item.icon}
+              <span className="text-sm font-medium">{item.title}</span>
+            </div>
+            {item.count && (
+              <span className="text-xs bg-primary text-white px-2 py-1 rounded-full">
+                {item.count}
               </span>
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-gray-900 truncate">
-                {user.email}
-              </p>
-              <p className="text-xs text-gray-500">Online</p>
-            </div>
-          </div>
+            )}
+          </a>
+        ))}
+      </nav>
+
+      {/* Folders Section */}
+      <div className="p-4 border-t border-border">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-sm font-semibold text-textPrimary">Pastas</h3>
+          <button className="text-accent hover:text-accentHover text-sm">
+            <Plus className="w-4 h-4" />
+          </button>
         </div>
-      )}
+        
+        <div className="space-y-1">
+          {folders.map((folder) => (
+            <div
+              key={folder.id}
+              className="flex items-center justify-between px-3 py-2 text-textSecondary hover:text-textPrimary hover:bg-surfaceHover rounded-md transition-colors cursor-pointer"
+            >
+              <div className="flex items-center gap-3">
+                <Folder className="w-4 h-4" />
+                <span className="text-sm">{folder.name}</span>
+              </div>
+              {folder.count > 0 && (
+                <span className="text-xs bg-surfaceHover text-textSecondary px-2 py-1 rounded-full">
+                  {folder.count}
+                </span>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Boards Section */}
+      <div className="p-4 border-t border-border">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-sm font-semibold text-textPrimary">Boards Kanban</h3>
+          <button className="text-accent hover:text-accentHover text-sm">
+            <Plus className="w-4 h-4" />
+          </button>
+        </div>
+        
+        <div className="space-y-1">
+          {boards.map((board) => (
+            <div
+              key={board.id}
+              className={`flex items-center justify-between px-3 py-2 rounded-md transition-colors cursor-pointer ${
+                selectedBoard === board.id
+                  ? 'bg-selected text-textPrimary'
+                  : 'text-textSecondary hover:text-textPrimary hover:bg-surfaceHover'
+              }`}
+              onClick={() => setSelectedBoard(board.id)}
+            >
+              <div className="flex items-center gap-3">
+                <Kanban className="w-4 h-4" />
+                <span className="text-sm">{board.name}</span>
+              </div>
+              {board.count > 0 && (
+                <span className="text-xs bg-primary text-white px-2 py-1 rounded-full">
+                  {board.count}
+                </span>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
     </aside>
   );
 }

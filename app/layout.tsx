@@ -1,15 +1,13 @@
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
 import './globals.css';
-import { Sidebar } from '@/components/layout/Sidebar';
-import { Header } from '@/components/layout/Header';
 import { AuthProvider } from '@/components/auth/AuthProvider';
-
-const inter = Inter({ subsets: ['latin'] });
+import { Sidebar } from '@/components/layout/Sidebar';
+import Header from '@/components/layout/Header';
+import { ThemeProvider } from '@/components/theme/ThemeProvider';
 
 export const metadata: Metadata = {
-  title: 'KrolikKanban - Organize suas tarefas',
-  description: 'Uma aplicação completa para gerenciar suas tarefas, notas e projetos',
+  title: 'KrolikKanban - Gerenciamento de Projetos',
+  description: 'Sistema completo de gerenciamento de projetos com Kanban, calendário e notas',
 };
 
 export default function RootLayout({
@@ -19,18 +17,20 @@ export default function RootLayout({
 }) {
   return (
     <html lang="pt-BR">
-      <body className={inter.className}>
-        <AuthProvider>
-          <div className="flex h-screen bg-gray-50">
-            <Sidebar />
-            <div className="flex-1 flex flex-col overflow-hidden">
-              <Header />
-              <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50">
-                {children}
-              </main>
+      <body className="bg-background text-textPrimary">
+        <ThemeProvider>
+          <AuthProvider>
+            <div className="flex h-screen">
+              <Sidebar />
+              <div className="flex-1 flex flex-col">
+                <Header />
+                <main className="flex-1 overflow-auto">
+                  {children}
+                </main>
+              </div>
             </div>
-          </div>
-        </AuthProvider>
+          </AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

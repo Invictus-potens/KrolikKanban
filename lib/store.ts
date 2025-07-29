@@ -2,6 +2,7 @@
 import { create } from 'zustand';
 import { supabase } from './supabase';
 import type { Database } from './supabase';
+import type { Theme } from './theme';
 
 type User = Database['public']['Tables']['users']['Row'];
 type Folder = Database['public']['Tables']['folders']['Row'];
@@ -16,6 +17,9 @@ interface AppState {
   // Auth
   user: User | null;
   isLoading: boolean;
+  
+  // Theme
+  theme: Theme;
   
   // Data
   folders: Folder[];
@@ -34,6 +38,8 @@ interface AppState {
   // Actions
   setUser: (user: User | null) => void;
   setLoading: (loading: boolean) => void;
+  setTheme: (theme: Theme) => void;
+  toggleTheme: () => void;
   
   // Folders
   setFolders: (folders: Folder[]) => void;
@@ -89,6 +95,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   // Initial state
   user: null,
   isLoading: false,
+  theme: 'dark', // Default to dark theme
   folders: [],
   tags: [],
   notes: [],
@@ -103,6 +110,8 @@ export const useAppStore = create<AppState>((set, get) => ({
   // Auth actions
   setUser: (user) => set({ user }),
   setLoading: (loading) => set({ isLoading: loading }),
+  setTheme: (theme) => set({ theme }),
+  toggleTheme: () => set((state) => ({ theme: state.theme === 'dark' ? 'light' : 'dark' })),
   
   // Folder actions
   setFolders: (folders) => set({ folders }),
