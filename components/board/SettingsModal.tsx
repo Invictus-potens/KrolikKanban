@@ -8,7 +8,6 @@ import { X, Save, Trash2, Eye, Lock, Globe, Users, Palette, Bell, Shield, Settin
 
 interface BoardSettings {
   title: string;
-  description: string;
   visibility: 'private' | 'public';
   allowComments: boolean;
   allowInvites: boolean;
@@ -39,7 +38,6 @@ export default function SettingsModal({ isOpen, onClose, boardId }: SettingsModa
   const [activeTab, setActiveTab] = useState('general');
   const [boardSettings, setBoardSettings] = useState<BoardSettings>({
     title: 'Main Project',
-    description: 'Main project management board for team collaboration',
     visibility: 'private',
     allowComments: true,
     allowInvites: true,
@@ -93,8 +91,7 @@ export default function SettingsModal({ isOpen, onClose, boardId }: SettingsModa
     setIsLoading(true);
     try {
       const updatedBoard = await kanbanService.updateBoard(boardId, {
-        title: boardSettings.title,
-        description: boardSettings.description
+        title: boardSettings.title
       });
       
       updateKanbanBoard(boardId, updatedBoard);
@@ -186,18 +183,6 @@ export default function SettingsModal({ isOpen, onClose, boardId }: SettingsModa
                     type="text"
                     value={boardSettings.title}
                     onChange={(e) => handleSettingChange('title', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Descrição
-                  </label>
-                  <textarea
-                    value={boardSettings.description}
-                    onChange={(e) => handleSettingChange('description', e.target.value)}
-                    rows={3}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
