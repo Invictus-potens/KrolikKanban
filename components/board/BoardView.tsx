@@ -2,237 +2,228 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useStore } from '@/lib/store';
-import { supabase } from '@/lib/supabase';
+import { useAppStore } from '@/lib/store';
+import { useAuth } from '@/components/auth/AuthProvider';
+import { kanbanService } from '@/lib/services';
 import { DndContext, DragEndEvent, DragOverEvent, DragStartEvent } from '@dnd-kit/core';
 import { SortableContext, horizontalListSortingStrategy } from '@dnd-kit/sortable';
 import ListColumn from './ListColumn';
 import { Plus } from 'lucide-react';
+import type { Database } from '@/lib/supabase';
 
-interface List {
-  id: string;
-  title: string;
-  position: number;
-  cards: Card[];
-}
-
-interface Card {
-  id: string;
-  title: string;
-  description?: string;
-  position: number;
-  due_date?: string;
-  assigned_user_id?: string;
-  labels: Label[];
-}
-
-interface Label {
-  id: string;
-  name: string;
-  color: string;
-}
+type KanbanBoard = Database['public']['Tables']['kanban_boards']['Row'];
+type KanbanColumn = Database['public']['Tables']['kanban_columns']['Row'];
+type KanbanCard = Database['public']['Tables']['kanban_cards']['Row'];
 
 export default function BoardView() {
-  const { currentBoard, theme } = useStore();
-  const [lists, setLists] = useState<List[]>([
-    {
-      id: '1',
-      title: 'A Fazer',
-      position: 0,
-      cards: [
-        {
-          id: '1',
-          title: 'Configurar autenticação',
-          description: 'Implementar sistema de login com Supabase',
-          position: 0,
-          due_date: '2024-12-25',
-          labels: [{ id: '1', name: 'Urgente', color: '#EF4444' }]
-        },
-        {
-          id: '2',
-          title: 'Criar interface do usuário',
-          description: 'Design responsivo para dispositivos móveis',
-          position: 1,
-          labels: [{ id: '2', name: 'Design', color: '#8B5CF6' }]
-        }
-      ]
-    },
-    {
-      id: '2',
-      title: 'Em Progresso',
-      position: 1,
-      cards: [
-        {
-          id: '3',
-          title: 'Implementar drag and drop',
-          description: 'Funcionalidade de arrastar e soltar cards',
-          position: 0,
-          labels: [{ id: '3', name: 'Desenvolvimento', color: '#10B981' }]
-        }
-      ]
-    },
-    {
-      id: '3',
-      title: 'Concluído',
-      position: 2,
-      cards: [
-        {
-          id: '4',
-          title: 'Setup inicial do projeto',
-          description: 'Configuração do Next.js e Tailwind',
-          position: 0,
-          labels: [{ id: '4', name: 'Concluído', color: '#10B981' }]
-        }
-      ]
+  const { user } = useAuth();
+  const { 
+    kanbanBoards, 
+    kanbanColumns, 
+    kanbanCards,
+    selectedBoard,
+    setSelectedBoard,
+    setKanbanColumns,
+    setKanbanCards,
+    moveKanbanCard
+  } = useAppStore();
+  
+  const [showNewColumn, setShowNewColumn] = useState(false);
+  const [newColumnTitle, setNewColumnTitle] = useState('');
+  const [draggedCard, setDraggedCard] = useState<KanbanCard | null>(null);
+
+  // Load board data when component mounts
+  useEffect(() => {
+    if (user && selectedBoard) {
+      loadBoardData();
     }
-  ]);
-  const [showNewList, setShowNewList] = useState(false);
-  const [newListTitle, setNewListTitle] = useState('');
-  const [draggedCard, setDraggedCard] = useState<Card | null>(null);
+  }, [user, selectedBoard]);
 
-  const createList = async () => {
-    if (!newListTitle.trim()) return;
+  const loadBoardData = async () => {
+    if (!selectedBoard) return;
+    
+    try {
+      const [columnsData, cardsData] = await Promise.all([
+        kanbanService.getColumns(selectedBoard),
+        // We'll load cards for each column separately
+        Promise.resolve([])
+      ]);
 
-    const newList = {
-      id: `list-${Date.now()}`,
-      title: newListTitle,
-      position: lists.length,
-      cards: []
-    };
+      setKanbanColumns(selectedBoard, columnsData);
+      
+      // Load cards for each column
+      for (const column of columnsData) {
+        const columnCards = await kanbanService.getCards(column.id);
+        setKanbanCards(column.id, columnCards);
+      }
+    } catch (error) {
+      console.error('Error loading board data:', error);
+    }
+  };
 
-    setLists([...lists, newList]);
-    setNewListTitle('');
-    setShowNewList(false);
+  const createColumn = async () => {
+    if (!newColumnTitle.trim() || !selectedBoard) return;
+
+    try {
+      const newColumn = await kanbanService.createColumn(selectedBoard, newColumnTitle);
+      setKanbanColumns(selectedBoard, [...(kanbanColumns[selectedBoard] || []), newColumn]);
+      setNewColumnTitle('');
+      setShowNewColumn(false);
+    } catch (error) {
+      console.error('Error creating column:', error);
+    }
   };
 
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event;
-    const card = lists
-      .flatMap(list => list.cards)
-      .find(card => card.id === active.id);
+    const card = findCardById(active.id as string);
     setDraggedCard(card || null);
   };
 
   const handleDragOver = (event: DragOverEvent) => {
     const { active, over } = event;
-    if (!over) return;
+    
+    if (!over || !active) return;
 
-    const activeId = active.id;
-    const overId = over.id;
+    const activeCard = findCardById(active.id as string);
+    const overColumnId = over.id as string;
 
-    if (activeId === overId) return;
-
-    const activeList = lists.find(list => 
-      list.cards.some(card => card.id === activeId)
-    );
-    const overList = lists.find(list => 
-      list.id === overId || list.cards.some(card => card.id === overId)
-    );
-
-    if (!activeList || !overList) return;
-
-    if (activeList.id !== overList.id) {
-      setLists(lists => {
-        const activeCardIndex = activeList.cards.findIndex(card => card.id === activeId);
-        const activeCard = activeList.cards[activeCardIndex];
-        
-        const newActiveLists = activeList.cards.filter(card => card.id !== activeId);
-        const newOverCards = [...overList.cards, activeCard];
-
-        return lists.map(list => {
-          if (list.id === activeList.id) {
-            return { ...list, cards: newActiveLists };
-          }
-          if (list.id === overList.id) {
-            return { ...list, cards: newOverCards };
-          }
-          return list;
-        });
-      });
+    if (activeCard && activeCard.column_id !== overColumnId) {
+      // Move card to different column
+      const newCards = kanbanCards[overColumnId] || [];
+      const updatedCard = { ...activeCard, column_id: overColumnId };
+      
+      setKanbanCards(overColumnId, [...newCards, updatedCard]);
+      
+      // Remove from old column
+      const oldColumnCards = kanbanCards[activeCard.column_id] || [];
+      setKanbanCards(activeCard.column_id, oldColumnCards.filter(card => card.id !== activeCard.id));
     }
   };
 
   const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+    
+    if (!over || !active) {
+      setDraggedCard(null);
+      return;
+    }
+
+    const activeCard = findCardById(active.id as string);
+    const overColumnId = over.id as string;
+
+    if (activeCard && activeCard.column_id !== overColumnId) {
+      try {
+        // Update card in database
+        await kanbanService.updateCard(activeCard.id, { column_id: overColumnId });
+        
+        // Update local state
+        moveKanbanCard(activeCard.id, overColumnId, 0);
+      } catch (error) {
+        console.error('Error moving card:', error);
+        // Revert changes on error
+        loadBoardData();
+      }
+    }
+
     setDraggedCard(null);
   };
 
-  const updateLists = () => {
-    // Força re-render das listas
-    setLists([...lists]);
+  const findCardById = (cardId: string): KanbanCard | null => {
+    for (const columnCards of Object.values(kanbanCards)) {
+      const card = columnCards.find(c => c.id === cardId);
+      if (card) return card;
+    }
+    return null;
   };
 
-  if (!currentBoard) {
+  if (!selectedBoard) {
     return (
-      <div className={`flex-1 flex items-center justify-center ${theme === 'dark' ? 'bg-slate-800' : 'bg-gray-50'}`}>
+      <div className="flex items-center justify-center h-full">
         <div className="text-center">
-          <h2 className={`text-xl font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'} mb-2}`}>
-            Selecione um quadro para começar
-          </h2>
-          <p className={`${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
-            Escolha um quadro da barra lateral ou crie um novo
-          </p>
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">Selecione um Board</h2>
+          <p className="text-gray-600">Escolha um board para começar a trabalhar</p>
         </div>
       </div>
     );
   }
 
-  return (
-    <div className={`flex-1 ${theme === 'dark' ? 'bg-slate-800' : 'bg-gray-50'} p-6 min-h-screen`}>
-      <DndContext
-        onDragStart={handleDragStart}
-        onDragOver={handleDragOver}
-        onDragEnd={handleDragEnd}
-      >
-        <div className="flex gap-6 min-h-full overflow-x-auto">
-          <SortableContext items={lists.map(l => l.id)} strategy={horizontalListSortingStrategy}>
-            {lists.map((list) => (
-              <ListColumn
-                key={list.id}
-                list={list}
-                onUpdateList={updateLists}
-              />
-            ))}
-          </SortableContext>
+  const currentBoard = kanbanBoards.find(board => board.id === selectedBoard);
+  const boardColumns = kanbanColumns[selectedBoard] || [];
 
-          <div className="flex-shrink-0 w-72">
-            {showNewList ? (
-              <div className={`${theme === 'dark' ? 'bg-slate-900' : 'bg-white'} rounded-lg p-4 shadow-sm`}>
-                <input
-                  type="text"
-                  placeholder="Digite o título da lista..."
-                  value={newListTitle}
-                  onChange={(e) => setNewListTitle(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && createList()}
-                  className={`w-full px-3 py-2 rounded-lg ${theme === 'dark' ? 'bg-slate-800 text-white' : 'bg-gray-100 text-gray-900'} border-none outline-none focus:ring-2 focus:ring-blue-500`}
-                  autoFocus
+  return (
+    <div className="h-full flex flex-col">
+      {/* Board Header */}
+      <div className="bg-white border-b border-gray-200 px-6 py-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">{currentBoard?.title}</h1>
+            <p className="text-sm text-gray-600">{boardColumns.length} colunas</p>
+          </div>
+          <button
+            onClick={() => setShowNewColumn(true)}
+            className="flex items-center space-x-2 bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition-colors"
+          >
+            <Plus className="h-4 w-4" />
+            <span>Nova Coluna</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Board Content */}
+      <div className="flex-1 overflow-x-auto p-6">
+        <DndContext
+          onDragStart={handleDragStart}
+          onDragOver={handleDragOver}
+          onDragEnd={handleDragEnd}
+        >
+          <div className="flex space-x-6 h-full">
+            <SortableContext items={boardColumns.map(col => col.id)} strategy={horizontalListSortingStrategy}>
+              {boardColumns.map((column) => (
+                <ListColumn
+                  key={column.id}
+                  column={column}
+                  cards={kanbanCards[column.id] || []}
                 />
-                <div className="flex gap-2 mt-3">
-                  <button
-                    onClick={createList}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium"
-                  >
-                    Adicionar Lista
-                  </button>
-                  <button
-                    onClick={() => setShowNewList(false)}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium ${theme === 'dark' ? 'bg-slate-800 text-white hover:bg-slate-700' : 'bg-gray-100 text-gray-900 hover:bg-gray-200'}`}
-                  >
-                    Cancelar
-                  </button>
-                </div>
-              </div>
-            ) : (
+              ))}
+            </SortableContext>
+          </div>
+        </DndContext>
+      </div>
+
+      {/* New Column Modal */}
+      {showNewColumn && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-96">
+            <h3 className="text-lg font-semibold mb-4">Nova Coluna</h3>
+            <input
+              type="text"
+              placeholder="Nome da coluna"
+              value={newColumnTitle}
+              onChange={(e) => setNewColumnTitle(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              onKeyPress={(e) => e.key === 'Enter' && createColumn()}
+            />
+            <div className="flex space-x-3 mt-4">
               <button
-                onClick={() => setShowNewList(true)}
-                className={`w-full flex items-center gap-2 px-4 py-3 rounded-lg ${theme === 'dark' ? 'bg-slate-900 hover:bg-slate-800 text-gray-300' : 'bg-white hover:bg-gray-50 text-gray-700'} border-2 border-dashed ${theme === 'dark' ? 'border-slate-700' : 'border-gray-300'}`}
+                onClick={createColumn}
+                className="flex-1 bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
               >
-                <Plus className="w-5 h-5" />
-                <span className="font-medium">Adicionar outra lista</span>
+                Criar
               </button>
-            )}
+              <button
+                onClick={() => {
+                  setShowNewColumn(false);
+                  setNewColumnTitle('');
+                }}
+                className="flex-1 bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400"
+              >
+                Cancelar
+              </button>
+            </div>
           </div>
         </div>
-      </DndContext>
+      )}
     </div>
   );
 }
