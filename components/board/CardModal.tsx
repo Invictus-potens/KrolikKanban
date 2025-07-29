@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useAppStore } from '@/lib/store';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { kanbanService } from '@/lib/services';
@@ -22,6 +22,10 @@ export default function CardModal({ card, onClose }: CardModalProps) {
   const [title, setTitle] = useState(card.title);
   const [description, setDescription] = useState(card.description || '');
   const [dueDate, setDueDate] = useState(card.due_date || '');
+  const [priority, setPriority] = useState<'low' | 'medium' | 'high'>(card.priority);
+  const [assignee, setAssignee] = useState(card.assignee || '');
+  const [tags, setTags] = useState<string[]>(card.tags || []);
+  const [newTag, setNewTag] = useState('');
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -33,7 +37,10 @@ export default function CardModal({ card, onClose }: CardModalProps) {
       const updatedCard = await kanbanService.updateCard(card.id, {
         title,
         description,
-        due_date: dueDate || null
+        due_date: dueDate || null,
+        priority,
+        assignee: assignee || null,
+        tags: tags.length > 0 ? tags : null
       });
       
       updateKanbanCard(card.id, updatedCard);
@@ -55,6 +62,17 @@ export default function CardModal({ card, onClose }: CardModalProps) {
     } catch (error) {
       console.error('Error deleting card:', error);
     }
+  };
+
+  const addTag = () => {
+    if (newTag.trim() && !tags.includes(newTag.trim())) {
+      setTags([...tags, newTag.trim()]);
+      setNewTag('');
+    }
+  };
+
+  const removeTag = (tagToRemove: string) => {
+    setTags(tags.filter(tag => tag !== tagToRemove));
   };
 
   const formatDueDate = (dateString: string) => {
@@ -80,7 +98,16 @@ export default function CardModal({ card, onClose }: CardModalProps) {
     return 'text-gray-500 bg-gray-50';
   };
 
-  return (
+  const getPriorityColor = (priority: string) => { 
+    switch (priority) { 
+      case 'high': return 'text-red-500 bg-red-50';
+      case 'medium': return 'text-yellow-500 bg-yellow-50';
+      case 'low': return 'text-green-500 bg-green-50';
+      default: return 'text-gray-500 bg-gray-50';
+    }
+  };
+
+  return ( 
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         {/* Header */}
@@ -92,36 +119,36 @@ export default function CardModal({ card, onClose }: CardModalProps) {
             <div>
               <h2 className="text-lg font-semibold text-gray-900">Card</h2>
               <p className="text-sm text-gray-500">ID: {card.id}</p>
-            </div>
-          </div>
+                  </div> 
+                </div> 
           <div className="flex items-center space-x-2">
-            <button
+                  <button 
               onClick={() => setIsEditing(!isEditing)}
               className="p-2 text-gray-600 hover:bg-gray-100 rounded-md"
-            >
-              <Edit2 className="w-4 h-4" />
-            </button>
+                  > 
+                    <Edit2 className="w-4 h-4" /> 
+                  </button> 
             <button
               onClick={deleteCard}
               className="p-2 text-red-600 hover:bg-red-50 rounded-md"
             >
               <Trash2 className="w-4 h-4" />
             </button>
-            <button
-              onClick={onClose}
+            <button 
+              onClick={onClose} 
               className="p-2 text-gray-600 hover:bg-gray-100 rounded-md"
-            >
+            > 
               <X className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
+            </button> 
+              </div> 
+            </div> 
 
         {/* Content */}
         <div className="p-6">
           {/* Title */}
           <div className="mb-6">
             {isEditing ? (
-              <input
+              <input 
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
@@ -131,7 +158,107 @@ export default function CardModal({ card, onClose }: CardModalProps) {
             ) : (
               <h3 className="text-xl font-semibold text-gray-900">{title}</h3>
             )}
-          </div>
+            </div> 
+
+          {/* Priority */}
+          <div className="mb-4">
+            <h4 className="text-sm font-medium text-gray-700 mb-2">Prioridade</h4>
+            {isEditing ? (
+              <select
+                value={priority}
+                onChange={(e) => setPriority(e.target.value as 'low' | 'medium' | 'high')}
+                className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="low">Baixa</option>
+                <option value="medium">Média</option>
+                <option value="high">Alta</option>
+              </select>
+            ) : (
+              <div className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(priority)}`}>
+                <span className="capitalize">{priority}</span>
+                  </div> 
+            )}
+              </div> 
+
+          {/* Tags */}
+          <div className="mb-4">
+            <h4 className="text-sm font-medium text-gray-700 mb-2">Tags</h4>
+            {isEditing ? (
+              <div className="space-y-2"> 
+                <div className="flex gap-2"> 
+                  <input 
+                    type="text" 
+                    value={newTag}
+                    onChange={(e) => setNewTag(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && addTag()}
+                    placeholder="Adicionar tag..."
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  /> 
+                  <button 
+                    onClick={addTag}
+                    className="px-3 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+                  > 
+                    <Plus className="w-4 h-4" /> 
+                  </button> 
+                </div> 
+                <div className="flex flex-wrap gap-1">
+                  {tags.map((tag, index) => (
+                    <span
+                      key={index}
+                      className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs"
+                    >
+                      <Tag className="w-3 h-3" />
+                      {tag}
+              <button 
+                        onClick={() => removeTag(tag)}
+                        className="ml-1 text-blue-500 hover:text-blue-700"
+              > 
+                        <X className="w-3 h-3" />
+              </button> 
+                    </span>
+                  ))} 
+                </div> 
+              </div> 
+            ) : (
+              <div className="flex flex-wrap gap-1">
+                {tags.length > 0 ? (
+                  tags.map((tag, index) => (
+                    <span
+                      key={index}
+                      className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs"
+                    >
+                      <Tag className="w-3 h-3" />
+                      {tag}
+                    </span>
+                  ))
+                ) : (
+                  <p className="text-gray-500 italic">Nenhuma tag</p>
+                )}
+                    </div> 
+                        )} 
+                      </div> 
+
+          {/* Assignee */}
+          <div className="mb-4">
+            <h4 className="text-sm font-medium text-gray-700 mb-2">Responsável</h4>
+            {isEditing ? (
+              <input
+                type="text"
+                value={assignee}
+                onChange={(e) => setAssignee(e.target.value)}
+                placeholder="Nome do responsável..."
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            ) : (
+              <div className="p-3 bg-gray-50 rounded-md">
+                {assignee ? (
+                  <p className="text-gray-700">{assignee}</p>
+                ) : (
+                  <p className="text-gray-500 italic">Nenhum responsável</p>
+                          )} 
+                        </div> 
+                      )} 
+              </div> 
 
           {/* Due Date */}
           {card.due_date && (
@@ -141,10 +268,23 @@ export default function CardModal({ card, onClose }: CardModalProps) {
                 <span className="text-sm text-gray-600">Data de vencimento:</span>
                 <span className={`text-sm font-medium px-2 py-1 rounded-full ${getDueDateColor()}`}>
                   {formatDueDate(card.due_date)}
-                </span>
-              </div>
+                  </span> 
+                </div> 
             </div>
           )}
+
+          {/* Due Date Editor */}
+          {isEditing && (
+            <div className="mb-6">
+              <h4 className="text-sm font-medium text-gray-700 mb-2">Data de Vencimento</h4>
+              <input
+                type="date"
+                value={dueDate}
+                onChange={(e) => setDueDate(e.target.value)}
+                className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+                    </div> 
+                  )} 
 
           {/* Description */}
           <div className="mb-6">
@@ -165,53 +305,40 @@ export default function CardModal({ card, onClose }: CardModalProps) {
                 )}
               </div>
             )}
-          </div>
-
-          {/* Due Date Editor */}
-          {isEditing && (
-            <div className="mb-6">
-              <h4 className="text-sm font-medium text-gray-700 mb-2">Data de Vencimento</h4>
-              <input
-                type="date"
-                value={dueDate}
-                onChange={(e) => setDueDate(e.target.value)}
-                className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-          )}
+                </div> 
 
           {/* Card Info */}
           <div className="grid grid-cols-2 gap-4 text-sm text-gray-600">
             <div>
               <span className="font-medium">Criado em:</span>
               <p>{new Date(card.created_at).toLocaleDateString('pt-BR')}</p>
-            </div>
+              </div> 
             <div>
               <span className="font-medium">Atualizado em:</span>
               <p>{new Date(card.updated_at).toLocaleDateString('pt-BR')}</p>
-            </div>
-          </div>
-        </div>
+            </div> 
+          </div> 
+        </div> 
 
         {/* Footer */}
         {isEditing && (
           <div className="flex items-center justify-end space-x-3 p-6 border-t border-gray-200">
-            <button
+            <button 
               onClick={() => setIsEditing(false)}
               className="px-4 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
             >
               Cancelar
-            </button>
-            <button
+            </button> 
+                <button 
               onClick={updateCard}
               disabled={isLoading}
               className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-50"
             >
               {isLoading ? 'Salvando...' : 'Salvar'}
-            </button>
-          </div>
+                </button> 
+            </div> 
         )}
-      </div>
-    </div>
-  );
+      </div> 
+    </div> 
+  ); 
 }

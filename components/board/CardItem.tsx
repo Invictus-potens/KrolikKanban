@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { format, isToday, isTomorrow, isPast } from 'date-fns';
-import { Calendar, User, MessageCircle, Paperclip, CheckSquare } from 'lucide-react';
+import { Calendar, User, MessageCircle, Paperclip, CheckSquare, Tag } from 'lucide-react';
 import CardModal from './CardModal';
 import type { Database } from '@/lib/supabase';
 
@@ -57,6 +57,15 @@ export default function CardItem({ card }: CardItemProps) {
     return format(dueDate, 'dd/MM');
   };
 
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case 'high': return 'text-red-500 bg-red-50';
+      case 'medium': return 'text-yellow-500 bg-yellow-50';
+      case 'low': return 'text-green-500 bg-green-50';
+      default: return 'text-gray-500 bg-gray-50';
+    }
+  };
+
   return (
     <>
       <div
@@ -77,6 +86,27 @@ export default function CardItem({ card }: CardItemProps) {
           </p>
         )}
 
+        {/* Priority Badge */}
+        <div className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(card.priority)} mb-2`}>
+          <span className="capitalize">{card.priority}</span>
+        </div>
+
+        {/* Tags */}
+        {card.tags && card.tags.length > 0 && (
+          <div className="flex flex-wrap gap-1 mb-2">
+            {card.tags.map((tag, index) => (
+              <span
+                key={index}
+                className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs"
+              >
+                <Tag className="w-3 h-3" />
+                {tag}
+              </span>
+            ))}
+          </div>
+        )}
+
+        {/* Due Date */}
         {card.due_date && (
           <div className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${getDueDateColor()}`}>
             <Calendar className="w-3 h-3" />
@@ -86,7 +116,7 @@ export default function CardItem({ card }: CardItemProps) {
 
         <div className="flex items-center justify-between mt-3">
           <div className="flex items-center gap-2">
-            {card.assigned_user_id && (
+            {card.assignee && (
               <div className="flex items-center gap-1 text-xs text-gray-500">
                 <User className="w-3 h-3" />
                 <span>Atribuído</span>
@@ -95,6 +125,8 @@ export default function CardItem({ card }: CardItemProps) {
           </div>
 
           <div className="flex items-center gap-1">
+            {/* Note: These fields don't exist in the current schema, but keeping for future expansion */}
+            {/* 
             {card.attachments && card.attachments.length > 0 && (
               <div className="flex items-center gap-1 text-xs text-gray-500">
                 <Paperclip className="w-3 h-3" />
@@ -115,6 +147,7 @@ export default function CardItem({ card }: CardItemProps) {
                 <span>{card.checklist_items.filter(item => item.completed).length}/{card.checklist_items.length}</span>
               </div>
             )}
+            */}
           </div>
         </div>
       </div>
