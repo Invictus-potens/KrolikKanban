@@ -170,18 +170,23 @@ export const useAppStore = create<AppState>((set, get) => ({
       board.id === id ? { ...board, ...updates } : board
     )
   })),
-  removeKanbanBoard: (id) => set((state) => ({
-    kanbanBoards: state.kanbanBoards.filter(board => board.id !== id),
-    kanbanColumns: { ...state.kanbanColumns, [id]: undefined },
-    kanbanCards: Object.fromEntries(
+  removeKanbanBoard: (id) => set((state) => {
+    const { [id]: removedColumns, ...remainingColumns } = state.kanbanColumns;
+    const remainingCards = Object.fromEntries(
       Object.entries(state.kanbanCards).filter(([columnId, cards]) => {
         const column = Object.values(state.kanbanColumns)
           .flat()
           .find(col => col.id === columnId);
         return column?.board_id !== id;
       })
-    )
-  })),
+    );
+    
+    return {
+      kanbanBoards: state.kanbanBoards.filter(board => board.id !== id),
+      kanbanColumns: remainingColumns,
+      kanbanCards: remainingCards
+    };
+  }),
   
   // Kanban Column actions
   setKanbanColumns: (boardId, columns) => set((state) => ({
@@ -203,15 +208,19 @@ export const useAppStore = create<AppState>((set, get) => ({
       ])
     )
   })),
-  removeKanbanColumn: (id) => set((state) => ({
-    kanbanColumns: Object.fromEntries(
-      Object.entries(state.kanbanColumns).map(([boardId, columns]) => [
-        boardId,
-        columns.filter(column => column.id !== id)
-      ])
-    ),
-    kanbanCards: { ...state.kanbanCards, [id]: undefined }
-  })),
+  removeKanbanColumn: (id) => set((state) => {
+    const { [id]: removedCards, ...remainingCards } = state.kanbanCards;
+    
+    return {
+      kanbanColumns: Object.fromEntries(
+        Object.entries(state.kanbanColumns).map(([boardId, columns]) => [
+          boardId,
+          columns.filter(column => column.id !== id)
+        ])
+      ),
+      kanbanCards: remainingCards
+    };
+  }),
   
   // Kanban Card actions
   setKanbanCards: (columnId, cards) => set((state) => ({
