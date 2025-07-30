@@ -156,13 +156,13 @@ export default function MembersModal({ isOpen, onClose, boardId }: MembersModalP
           <h2 className={`text-xl font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
             Membros do Board
           </h2>
-                      <button
-              onClick={onClose}
-              className={`p-2 rounded-lg ${theme === 'dark' ? 'hover:bg-slate-700' : 'hover:bg-gray-100'}`}
-              title="Fechar modal"
-            >
-              <X className="w-5 h-5" />
-            </button>
+          <button
+            onClick={onClose}
+            className={`p-2 rounded-lg ${theme === 'dark' ? 'hover:bg-slate-700' : 'hover:bg-gray-100'}`}
+            title="Fechar modal"
+          >
+            <X className="w-5 h-5" />
+          </button>
         </div>
 
         {/* Content */}
@@ -293,43 +293,44 @@ export default function MembersModal({ isOpen, onClose, boardId }: MembersModalP
 
                 {/* Members */}
                 {members.map((member) => (
-                <div
-                  key={member.id}
-                  className={`flex items-center justify-between p-3 rounded-lg ${theme === 'dark' ? 'bg-slate-700' : 'bg-gray-50'}`}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
-                      <span className="text-white font-medium text-sm">
-                        {member.user.name.charAt(0).toUpperCase()}
-                      </span>
+                  <div
+                    key={member.id}
+                    className={`flex items-center justify-between p-3 rounded-lg ${theme === 'dark' ? 'bg-slate-700' : 'bg-gray-50'}`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
+                        <span className="text-white font-medium text-sm">
+                          {member.user.name.charAt(0).toUpperCase()}
+                        </span>
+                      </div>
+                      <div>
+                        <div className={`font-medium ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+                          {member.user.name}
+                        </div>
+                        <div className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
+                          {member.user.email}
+                        </div>
+                      </div>
                     </div>
-                    <div>
-                      <div className={`font-medium ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-                        {member.user.name}
+                    <div className="flex items-center gap-2">
+                      <div className={`flex items-center gap-1 ${getRoleColor(member.role)}`}>
+                        {getRoleIcon(member.role)}
+                        <span className="text-sm capitalize">{member.role}</span>
                       </div>
-                      <div className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
-                        {member.user.email}
-                      </div>
+                      {canManageMembers && member.role !== 'admin' && (
+                        <button
+                          onClick={() => handleRemoveMember(member.user_id)}
+                          className={`p-1 rounded ${theme === 'dark' ? 'hover:bg-slate-600' : 'hover:bg-gray-200'} text-red-500`}
+                          title="Remover membro"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      )}
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <div className={`flex items-center gap-1 ${getRoleColor(member.role)}`}>
-                      {getRoleIcon(member.role)}
-                      <span className="text-sm capitalize">{member.role}</span>
-                    </div>
-                    {canManageMembers && member.role !== 'admin' && (
-                      <button
-                        onClick={() => handleRemoveMember(member.user_id)}
-                        className={`p-1 rounded ${theme === 'dark' ? 'hover:bg-slate-600' : 'hover:bg-gray-200'} text-red-500`}
-                        title="Remover membro"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
