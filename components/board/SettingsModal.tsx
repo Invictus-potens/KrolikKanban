@@ -1,8 +1,9 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useStore } from '@/lib/store';
+import { BoardService, BoardSettingsForm } from '@/lib/boardService';
 import { X, Save, Trash2, Eye, Lock, Globe, Users, Palette, Bell, Shield, Settings } from 'lucide-react';
 
 interface SettingsModalProps {
@@ -12,16 +13,16 @@ interface SettingsModalProps {
 }
 
 export default function SettingsModal({ isOpen, onClose, boardId }: SettingsModalProps) {
-  const { theme } = useStore();
+  const { theme, user } = useStore();
   const [activeTab, setActiveTab] = useState('general');
-  const [boardSettings, setBoardSettings] = useState({
-    title: 'Main Project',
-    description: 'Main project management board for team collaboration',
+  const [boardSettings, setBoardSettings] = useState<BoardSettingsForm>({
+    title: '',
+    description: '',
     visibility: 'private',
-    allowComments: true,
-    allowInvites: true,
-    backgroundColor: '#3B82F6',
-    backgroundImage: null,
+    background_color: '#3B82F6',
+    background_image: undefined,
+    allow_comments: true,
+    allow_invites: true,
     notifications: {
       cardUpdates: true,
       mentions: true,
@@ -36,11 +37,45 @@ export default function SettingsModal({ isOpen, onClose, boardId }: SettingsModa
     }
   });
   const [isDirty, setIsDirty] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [userRole, setUserRole] = useState<'owner' | 'admin' | 'member' | 'viewer' | null>(null);
 
   const backgroundColors = [
     '#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', 
     '#EC4899', '#06B6D4', '#84CC16', '#F97316', '#6366F1'
   ];
+
+  // Carregar configurações do board
+  useEffect(() => {
+    if (isOpen && boardId && user) {
+      loadBoardSettings();
+      loadUserRole();
+    }
+  }, [isOpen, boardId, user]);
+
+  const loadBoardSettings = async () => {
+    setIsLoading(true);
+    try {
+      const settings = await BoardService.getBoardSettings(boardId);
+      if (settings) {
+        setBoardSettings(settings);
+      }
+    } catch (error) {
+      console.error('Error loading board settings:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const loadUserRole = async () => {
+    if (!user) return;
+    try {
+      const role = await BoardService.getUserBoardRole(boardId, user.id);
+      setUserRole(role);
+    } catch (error) {
+      console.error('Error loading user role:', error);
+    }
+  };
 
   const handleSettingChange = (key: string, value: any) => {
     setBoardSettings(prev => ({
@@ -61,17 +96,51 @@ export default function SettingsModal({ isOpen, onClose, boardId }: SettingsModa
     setIsDirty(true);
   };
 
-  const handleSaveSettings = () => {
-    // Save settings logic here
-    console.log('Saving settings:', boardSettings);
-    setIsDirty(false);
+  const handleSaveSettings = async () => {
+    if (!user || !['owner', 'admin'].includes(userRole || '')) {
+      alert('Você não tem permissão para salvar as configurações.');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const success = await BoardService.saveBoardSettings(boardId, boardSettings);
+      if (success) {
+        setIsDirty(false);
+        alert('Configurações salvas com sucesso!');
+      } else {
+        alert('Erro ao salvar configurações.');
+      }
+    } catch (error) {
+      console.error('Error saving settings:', error);
+      alert('Erro ao salvar configurações.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleDeleteBoard = () => {
-    if (confirm('Are you sure you want to delete this board? This action cannot be undone.')) {
-      // Delete board logic here
-      console.log('Deleting board:', boardId);
-      onClose();
+  const handleDeleteBoard = async () => {
+    if (!user || userRole !== 'owner') {
+      alert('Apenas o dono do board pode deletá-lo.');
+      return;
+    }
+
+    if (confirm('Tem certeza que deseja deletar este board? Esta ação não pode ser desfeita.')) {
+      setIsLoading(true);
+      try {
+        const success = await BoardService.deleteBoard(boardId);
+        if (success) {
+          alert('Board deletado com sucesso!');
+          onClose();
+        } else {
+          alert('Erro ao deletar board.');
+        }
+      } catch (error) {
+        console.error('Error deleting board:', error);
+        alert('Erro ao deletar board.');
+      } finally {
+        setIsLoading(false);
+      }
     }
   };
 
@@ -94,13 +163,14 @@ export default function SettingsModal({ isOpen, onClose, boardId }: SettingsModa
               Board Settings
             </h2>
             <div className="flex items-center gap-2">
-              {isDirty && (
+              {isDirty && ['owner', 'admin'].includes(userRole || '') && (
                 <button
                   onClick={handleSaveSettings}
-                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm whitespace-nowrap"
+                  disabled={isLoading}
+                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm whitespace-nowrap disabled:opacity-50"
                 >
                   <Save className="w-4 h-4" />
-                  Save Changes
+                  {isLoading ? 'Salvando...' : 'Salvar Alterações'}
                 </button>
               )}
               <button
@@ -132,15 +202,20 @@ export default function SettingsModal({ isOpen, onClose, boardId }: SettingsModa
                 ))}
               </nav>
 
-              <div className="mt-8 pt-4 border-t border-slate-700">
-                <button
-                  onClick={handleDeleteBoard}
-                  className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20"
-                >
-                  <Trash2 className="w-4 h-4" />
-                  <span className="text-sm font-medium">Delete Board</span>
-                </button>
-              </div>
+              {userRole === 'owner' && (
+                <div className="mt-8 pt-4 border-t border-slate-700">
+                  <button
+                    onClick={handleDeleteBoard}
+                    disabled={isLoading}
+                    className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 disabled:opacity-50"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    <span className="text-sm font-medium">
+                      {isLoading ? 'Deletando...' : 'Deletar Board'}
+                    </span>
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Content */}
@@ -411,9 +486,9 @@ export default function SettingsModal({ isOpen, onClose, boardId }: SettingsModa
                         {backgroundColors.map((color) => (
                           <button
                             key={color}
-                            onClick={() => handleSettingChange('backgroundColor', color)}
+                            onClick={() => handleSettingChange('background_color', color)}
                             className={`w-12 h-12 rounded-lg border-2 ${
-                              boardSettings.backgroundColor === color
+                              boardSettings.background_color === color
                                 ? 'border-white shadow-lg'
                                 : 'border-transparent'
                             }`}

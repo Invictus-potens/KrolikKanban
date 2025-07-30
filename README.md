@@ -10,6 +10,7 @@ Este projeto está configurado para deploy automático no Railway usando Nixpack
 
 1. Conta no [Railway](https://railway.app)
 2. Projeto conectado ao Railway
+3. **Supabase configurado** (veja [SUPABASE_SETUP.md](./SUPABASE_SETUP.md))
 
 ### Variáveis de Ambiente
 
@@ -59,8 +60,26 @@ KrolikKanban/
 ├── lib/                # Utilitários e configurações
 ├── railway.toml        # Configuração do Railway
 ├── nixpacks.toml       # Configuração do Nixpack
+├── supabase-schema.sql # Schema do banco de dados
+├── SUPABASE_SETUP.md   # Guia de configuração do Supabase
+├── MEMBER_SYSTEM.md    # Documentação do sistema de membros
 └── Dockerfile          # Dockerfile opcional
 ```
+
+## 🗄️ Banco de Dados (Supabase)
+
+O projeto usa Supabase como backend. Veja [SUPABASE_SETUP.md](./SUPABASE_SETUP.md) para configuração completa.
+
+### Funcionalidades Implementadas
+
+- ✅ **Configurações de Board** - Visibilidade, permissões, notificações
+- ✅ **Sistema de Membros** - Roles: owner, admin, member, viewer (veja [MEMBER_SYSTEM.md](./MEMBER_SYSTEM.md))
+- ✅ **Comentários com Menções** - Sistema @usuario
+- ✅ **Checklists** - Listas de tarefas nos cards
+- ✅ **Anexos** - Upload de arquivos
+- ✅ **Observadores** - Usuários que acompanham cards
+- ✅ **Etiquetas** - Categorização de cards
+- ✅ **Row Level Security** - Segurança por usuário
 
 ## 🔧 Tecnologias
 

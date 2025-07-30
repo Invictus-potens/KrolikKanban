@@ -18,6 +18,7 @@ export type Database = {
           avatar_url?: string;
           theme: 'light' | 'dark';
           created_at: string;
+          updated_at: string;
         };
         Insert: {
           id: string;
@@ -26,6 +27,7 @@ export type Database = {
           avatar_url?: string;
           theme?: 'light' | 'dark';
           created_at?: string;
+          updated_at?: string;
         };
         Update: {
           id?: string;
@@ -34,6 +36,7 @@ export type Database = {
           avatar_url?: string;
           theme?: 'light' | 'dark';
           created_at?: string;
+          updated_at?: string;
         };
       };
       boards: {
@@ -42,8 +45,11 @@ export type Database = {
           title: string;
           description?: string;
           owner_id: string;
-          is_private: boolean;
+          visibility: 'private' | 'team' | 'public';
           background_color: string;
+          background_image?: string;
+          allow_comments: boolean;
+          allow_invites: boolean;
           created_at: string;
           updated_at: string;
         };
@@ -52,8 +58,11 @@ export type Database = {
           title: string;
           description?: string;
           owner_id: string;
-          is_private?: boolean;
+          visibility?: 'private' | 'team' | 'public';
           background_color?: string;
+          background_image?: string;
+          allow_comments?: boolean;
+          allow_invites?: boolean;
           created_at?: string;
           updated_at?: string;
         };
@@ -62,8 +71,67 @@ export type Database = {
           title?: string;
           description?: string;
           owner_id?: string;
-          is_private?: boolean;
+          visibility?: 'private' | 'team' | 'public';
           background_color?: string;
+          background_image?: string;
+          allow_comments?: boolean;
+          allow_invites?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      board_settings: {
+        Row: {
+          id: string;
+          board_id: string;
+          notifications: {
+            cardUpdates: boolean;
+            mentions: boolean;
+            dueDate: boolean;
+            newMembers: boolean;
+          };
+          permissions: {
+            allowMemberInvites: boolean;
+            allowCardDeletion: boolean;
+            allowListDeletion: boolean;
+            requireApproval: boolean;
+          };
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          board_id: string;
+          notifications?: {
+            cardUpdates: boolean;
+            mentions: boolean;
+            dueDate: boolean;
+            newMembers: boolean;
+          };
+          permissions?: {
+            allowMemberInvites: boolean;
+            allowCardDeletion: boolean;
+            allowListDeletion: boolean;
+            requireApproval: boolean;
+          };
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          board_id?: string;
+          notifications?: {
+            cardUpdates: boolean;
+            mentions: boolean;
+            dueDate: boolean;
+            newMembers: boolean;
+          };
+          permissions?: {
+            allowMemberInvites: boolean;
+            allowCardDeletion: boolean;
+            allowListDeletion: boolean;
+            requireApproval: boolean;
+          };
           created_at?: string;
           updated_at?: string;
         };
@@ -218,6 +286,87 @@ export type Database = {
           board_id?: string;
           user_id?: string;
           role?: 'admin' | 'member' | 'viewer';
+          created_at?: string;
+        };
+      };
+      card_checklist: {
+        Row: {
+          id: string;
+          card_id: string;
+          text: string;
+          completed: boolean;
+          position: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          card_id: string;
+          text: string;
+          completed?: boolean;
+          position: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          card_id?: string;
+          text?: string;
+          completed?: boolean;
+          position?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      card_attachments: {
+        Row: {
+          id: string;
+          card_id: string;
+          name: string;
+          url: string;
+          type: string;
+          size: number;
+          uploaded_by?: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          card_id: string;
+          name: string;
+          url: string;
+          type: string;
+          size: number;
+          uploaded_by?: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          card_id?: string;
+          name?: string;
+          url?: string;
+          type?: string;
+          size?: number;
+          uploaded_by?: string;
+          created_at?: string;
+        };
+      };
+      card_watchers: {
+        Row: {
+          id: string;
+          card_id: string;
+          user_id: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          card_id: string;
+          user_id: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          card_id?: string;
+          user_id?: string;
           created_at?: string;
         };
       };
