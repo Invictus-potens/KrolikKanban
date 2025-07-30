@@ -203,55 +203,56 @@ export default function MembersModal({ isOpen, onClose, boardId }: MembersModalP
               <h3 className={`text-sm font-medium ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'} mb-3`}>
                 Convidar Novo Membro
               </h3>
-            <div className="space-y-3">
-              <div>
-                <label htmlFor="invite-email" className="sr-only">
-                  Email do usuário
-                </label>
-                <input
-                  id="invite-email"
-                  type="email"
-                  placeholder="Digite o email do usuário"
-                  value={inviteEmail}
-                  onChange={(e) => setInviteEmail(e.target.value)}
-                  className={`w-full px-3 py-2 rounded-lg ${theme === 'dark' ? 'bg-slate-700 text-white placeholder-gray-400' : 'bg-gray-100 text-gray-900 placeholder-gray-500'} border-none outline-none focus:ring-2 focus:ring-blue-500`}
-                />
-              </div>
-              <div className="flex gap-2">
-                <label htmlFor="invite-role" className="sr-only">
-                  Role do usuário
-                </label>
-                <select
-                  id="invite-role"
-                  value={inviteRole}
-                  onChange={(e) => setInviteRole(e.target.value as 'admin' | 'member' | 'viewer')}
-                  className={`px-3 py-2 rounded-lg ${theme === 'dark' ? 'bg-slate-700 text-white' : 'bg-gray-100 text-gray-900'} border-none outline-none focus:ring-2 focus:ring-blue-500 pr-8`}
-                >
-                  <option value="viewer">Visualizador</option>
-                  <option value="member">Membro</option>
-                  <option value="admin">Administrador</option>
-                </select>
-                <button
-                  onClick={handleInviteMember}
-                  disabled={isInviting || !inviteEmail.trim()}
-                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
-                  title="Convidar usuário"
-                >
-                  {isInviting ? (
-                    <>
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      Enviando...
-                    </>
-                  ) : (
-                    <>
-                      <Mail className="w-4 h-4" />
-                      Convidar
-                    </>
-                  )}
-                </button>
+              <div className="space-y-3">
+                <div>
+                  <label htmlFor="invite-email" className="sr-only">
+                    Email do usuário
+                  </label>
+                  <input
+                    id="invite-email"
+                    type="email"
+                    placeholder="Digite o email do usuário"
+                    value={inviteEmail}
+                    onChange={(e) => setInviteEmail(e.target.value)}
+                    className={`w-full px-3 py-2 rounded-lg ${theme === 'dark' ? 'bg-slate-700 text-white placeholder-gray-400' : 'bg-gray-100 text-gray-900 placeholder-gray-500'} border-none outline-none focus:ring-2 focus:ring-blue-500`}
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <label htmlFor="invite-role" className="sr-only">
+                    Role do usuário
+                  </label>
+                  <select
+                    id="invite-role"
+                    value={inviteRole}
+                    onChange={(e) => setInviteRole(e.target.value as 'admin' | 'member' | 'viewer')}
+                    className={`px-3 py-2 rounded-lg ${theme === 'dark' ? 'bg-slate-700 text-white' : 'bg-gray-100 text-gray-900'} border-none outline-none focus:ring-2 focus:ring-blue-500 pr-8`}
+                  >
+                    <option value="viewer">Visualizador</option>
+                    <option value="member">Membro</option>
+                    <option value="admin">Administrador</option>
+                  </select>
+                  <button
+                    onClick={handleInviteMember}
+                    disabled={isInviting || !inviteEmail.trim()}
+                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                    title="Convidar usuário"
+                  >
+                    {isInviting ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        Enviando...
+                      </>
+                    ) : (
+                      <>
+                        <Mail className="w-4 h-4" />
+                        Convidar
+                      </>
+                    )}
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
           {/* Members List */}
           <div>
