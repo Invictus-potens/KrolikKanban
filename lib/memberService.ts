@@ -183,26 +183,32 @@ export class MemberService {
   // Buscar owner do board
   static async getBoardOwner(boardId: string): Promise<BoardOwner | null> {
     try {
-      const { data, error } = await supabase
+      // Primeiro buscar o board para pegar o owner_id
+      const { data: board, error: boardError } = await supabase
         .from('boards')
-        .select(`
-          owner:users!boards_owner_id_fkey(id, name, email, avatar_url)
-        `)
+        .select('owner_id')
         .eq('id', boardId)
         .single();
 
-      if (error) throw error;
-      
-      if (data?.owner) {
-        return {
-          id: data.owner.id,
-          name: data.owner.name,
-          email: data.owner.email,
-          avatar_url: data.owner.avatar_url
-        };
-      }
-      
-      return null;
+      if (boardError) throw boardError;
+      if (!board?.owner_id) return null;
+
+      // Depois buscar os dados do usuário owner
+      const { data: user, error: userError } = await supabase
+        .from('users')
+        .select('id, name, email, avatar_url')
+        .eq('id', board.owner_id)
+        .single();
+
+      if (userError) throw userError;
+      if (!user) return null;
+
+      return {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        avatar_url: user.avatar_url
+      };
     } catch (error) {
       console.error('Error fetching board owner:', error);
       return null;
