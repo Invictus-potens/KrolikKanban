@@ -20,6 +20,14 @@ export interface InviteMemberData {
   role: 'admin' | 'member' | 'viewer';
 }
 
+// Interface simplificada para o owner
+export interface BoardOwner {
+  id: string;
+  name: string;
+  email: string;
+  avatar_url?: string;
+}
+
 export class MemberService {
   // Buscar membros do board
   static async getBoardMembers(boardId: string): Promise<MemberWithUser[]> {
@@ -173,7 +181,7 @@ export class MemberService {
   }
 
   // Buscar owner do board
-  static async getBoardOwner(boardId: string): Promise<User | null> {
+  static async getBoardOwner(boardId: string): Promise<BoardOwner | null> {
     try {
       const { data, error } = await supabase
         .from('boards')
@@ -184,7 +192,17 @@ export class MemberService {
         .single();
 
       if (error) throw error;
-      return data?.owner || null;
+      
+      if (data?.owner) {
+        return {
+          id: data.owner.id,
+          name: data.owner.name,
+          email: data.owner.email,
+          avatar_url: data.owner.avatar_url
+        };
+      }
+      
+      return null;
     } catch (error) {
       console.error('Error fetching board owner:', error);
       return null;
@@ -239,4 +257,4 @@ export class MemberService {
       return [];
     }
   }
-} 
+}

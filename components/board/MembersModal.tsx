@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useStore } from '@/lib/store';
-import { MemberService, MemberWithUser } from '@/lib/memberService';
+import { MemberService, MemberWithUser, BoardOwner } from '@/lib/memberService';
 import { X, Plus, Mail, Crown, User as UserIcon, Eye, AlertCircle } from 'lucide-react';
 
 interface MembersModalProps {
@@ -14,7 +14,7 @@ interface MembersModalProps {
 export default function MembersModal({ isOpen, onClose, boardId }: MembersModalProps) {
   const { theme, user } = useStore();
   const [members, setMembers] = useState<MemberWithUser[]>([]);
-  const [owner, setOwner] = useState<{ id: string; name: string; email: string; avatar_url?: string } | null>(null);
+  const [owner, setOwner] = useState<BoardOwner | null>(null);
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviteRole, setInviteRole] = useState<'admin' | 'member' | 'viewer'>('member');
   const [isInviting, setIsInviting] = useState(false);
