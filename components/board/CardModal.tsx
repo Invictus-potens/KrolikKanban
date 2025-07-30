@@ -624,10 +624,10 @@ export default function CardModal({ card, onClose, onUpdate }: CardModalProps) {
 
               {/* New Comment */} 
               <div className="flex gap-3"> 
-                <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0"> 
-                  <span className="text-white font-medium text-sm"> 
-                    {user?.name?.charAt(0) || 'U'} 
-                  </span> 
+                                <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
+                  <span className="text-white font-medium text-sm">
+                    {user?.user_metadata?.name?.charAt(0) || user?.email?.charAt(0) || 'U'}
+                  </span>
                 </div> 
                 <div className="flex-1 relative"> 
                   <textarea 

@@ -54,7 +54,7 @@ export default function SettingsModal({ isOpen, onClose, boardId }: SettingsModa
     setBoardSettings(prev => ({
       ...prev,
       [category]: {
-        ...prev[category],
+        ...(prev as any)[category],
         [key]: value
       }
     }));
