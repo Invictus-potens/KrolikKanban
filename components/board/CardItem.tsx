@@ -2,20 +2,36 @@
 'use client';
 
 import { useState } from 'react';
+import { useStore } from '@/lib/store';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { format, isToday, isTomorrow, isPast } from 'date-fns';
-import { Calendar, User, MessageCircle, Paperclip, CheckSquare, Tag } from 'lucide-react';
+import { Calendar, User, MessageCircle, Paperclip, CheckSquare } from 'lucide-react';
 import CardModal from './CardModal';
-import type { Database } from '@/lib/supabase';
 
-type KanbanCard = Database['public']['Tables']['kanban_cards']['Row'];
-
-interface CardItemProps {
-  card: KanbanCard;
+interface Card {
+  id: string;
+  title: string;
+  description?: string;
+  position: number;
+  due_date?: string;
+  assigned_user_id?: string;
+  labels: Label[];
 }
 
-export default function CardItem({ card }: CardItemProps) {
+interface Label {
+  id: string;
+  name: string;
+  color: string;
+}
+
+interface CardItemProps {
+  card: Card;
+  onUpdateCard: () => void;
+}
+
+export default function CardItem({ card, onUpdateCard }: CardItemProps) {
+  const { theme } = useStore();
   const [showModal, setShowModal] = useState(false);
 
   const {
@@ -52,18 +68,9 @@ export default function CardItem({ card }: CardItemProps) {
     if (!card.due_date) return '';
     
     const dueDate = new Date(card.due_date);
-    if (isToday(dueDate)) return 'Hoje';
-    if (isTomorrow(dueDate)) return 'Amanhã';
-    return format(dueDate, 'dd/MM');
-  };
-
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'high': return 'text-red-500 bg-red-50';
-      case 'medium': return 'text-yellow-500 bg-yellow-50';
-      case 'low': return 'text-green-500 bg-green-50';
-      default: return 'text-gray-500 bg-gray-50';
-    }
+    if (isToday(dueDate)) return 'Today';
+    if (isTomorrow(dueDate)) return 'Tomorrow';
+    return format(dueDate, 'MMM d');
   };
 
   return (
@@ -74,80 +81,56 @@ export default function CardItem({ card }: CardItemProps) {
         {...attributes}
         {...listeners}
         onClick={() => setShowModal(true)}
-        className="bg-white rounded-lg p-3 shadow-sm border border-gray-200 cursor-pointer hover:shadow-md transition-shadow"
+        className={`${theme === 'dark' ? 'bg-slate-800' : 'bg-white'} rounded-lg p-3 shadow-sm border ${theme === 'dark' ? 'border-slate-700' : 'border-gray-200'} cursor-pointer hover:shadow-md transition-shadow ${isDragging ? 'opacity-50' : ''}`}
       >
-        <h4 className="font-medium text-gray-900 mb-2">
-          {card.title}
-        </h4>
-
-        {card.description && (
-          <p className="text-sm text-gray-600 mb-3 line-clamp-2">
-            {card.description}
-          </p>
-        )}
-
-        {/* Priority Badge */}
-        <div className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(card.priority)} mb-2`}>
-          <span className="capitalize">{card.priority}</span>
-        </div>
-
-        {/* Tags */}
-        {card.tags && card.tags.length > 0 && (
+        {card.labels.length > 0 && (
           <div className="flex flex-wrap gap-1 mb-2">
-            {card.tags.map((tag, index) => (
+            {card.labels.map((label) => (
               <span
-                key={index}
-                className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs"
+                key={label.id}
+                className="px-2 py-1 text-xs font-medium rounded-full text-white"
+                style={{ backgroundColor: label.color }}
               >
-                <Tag className="w-3 h-3" />
-                {tag}
+                {label.name}
               </span>
             ))}
           </div>
         )}
 
-        {/* Due Date */}
-        {card.due_date && (
-          <div className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${getDueDateColor()}`}>
-            <Calendar className="w-3 h-3" />
-            {formatDueDate()}
-          </div>
+        <h4 className={`font-medium ${theme === 'dark' ? 'text-white' : 'text-gray-900'} mb-2`}>
+          {card.title}
+        </h4>
+
+        {card.description && (
+          <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'} mb-3 line-clamp-2`}>
+            {card.description}
+          </p>
         )}
 
-        <div className="flex items-center justify-between mt-3">
+        <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            {card.assignee && (
-              <div className="flex items-center gap-1 text-xs text-gray-500">
-                <User className="w-3 h-3" />
-                <span>Atribuído</span>
+            {card.due_date && (
+              <div className={`flex items-center gap-1 px-2 py-1 rounded text-xs font-medium ${getDueDateColor()}`}>
+                <Calendar className="w-3 h-3" />
+                {formatDueDate()}
               </div>
             )}
           </div>
 
           <div className="flex items-center gap-1">
-            {/* Note: These fields don't exist in the current schema, but keeping for future expansion */}
-            {/* 
-            {card.attachments && card.attachments.length > 0 && (
-              <div className="flex items-center gap-1 text-xs text-gray-500">
-                <Paperclip className="w-3 h-3" />
-                <span>{card.attachments.length}</span>
+            <div className="flex items-center gap-1 text-xs text-gray-500">
+              <MessageCircle className="w-3 h-3" />
+              <span>2</span>
+            </div>
+            <div className="flex items-center gap-1 text-xs text-gray-500">
+              <CheckSquare className="w-3 h-3" />
+              <span>1/3</span>
+            </div>
+            {card.assigned_user_id && (
+              <div className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center">
+                <User className="w-3 h-3 text-white" />
               </div>
             )}
-            
-            {card.comments && card.comments.length > 0 && (
-              <div className="flex items-center gap-1 text-xs text-gray-500">
-                <MessageCircle className="w-3 h-3" />
-                <span>{card.comments.length}</span>
-              </div>
-            )}
-            
-            {card.checklist_items && card.checklist_items.length > 0 && (
-              <div className="flex items-center gap-1 text-xs text-gray-500">
-                <CheckSquare className="w-3 h-3" />
-                <span>{card.checklist_items.filter(item => item.completed).length}/{card.checklist_items.length}</span>
-              </div>
-            )}
-            */}
           </div>
         </div>
       </div>
@@ -156,6 +139,7 @@ export default function CardItem({ card }: CardItemProps) {
         <CardModal
           card={card}
           onClose={() => setShowModal(false)}
+          onUpdate={onUpdateCard}
         />
       )}
     </>

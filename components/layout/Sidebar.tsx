@@ -1,170 +1,184 @@
 
 'use client';
 
-import { useState } from 'react';
-import { useAuth } from '@/components/auth/AuthProvider';
-import { useAppStore } from '@/lib/store';
-import { 
-  Folder, 
-  Kanban, 
-  Calendar, 
-  FileText, 
-  Tag, 
-  Settings,
-  ChevronDown,
-  Plus
-} from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { useStore } from '@/lib/store';
+import { supabase } from '@/lib/supabase';
+import { Plus, Settings, Search, Users, Calendar, Tag } from 'lucide-react';
+import Link from 'next/link';
+import MembersModal from '@/components/board/MembersModal';
+import SettingsModal from '@/components/board/SettingsModal';
 
-export function Sidebar() {
-  const { user } = useAuth();
-  const { isSidebarOpen, selectedBoard, setSelectedBoard } = useAppStore();
-  const [expandedFolders, setExpandedFolders] = useState(true);
-  const [expandedBoards, setExpandedBoards] = useState(true);
+interface Board {
+  id: string;
+  title: string;
+  background_color: string;
+}
 
-  if (!user) return null;
+interface Label {
+  id: string;
+  name: string;
+  color: string;
+}
 
-  const navigationItems = [
-    {
-      title: 'Dashboard',
-      icon: <Kanban className="w-5 h-5" />,
-      href: '/',
-      count: null
-    },
-    {
-      title: 'Kanban',
-      icon: <Kanban className="w-5 h-5" />,
-      href: '/kanban',
-      count: 3
-    },
-    {
-      title: 'Calendário',
-      icon: <Calendar className="w-5 h-5" />,
-      href: '/calendar',
-      count: 5
-    },
-    {
-      title: 'Notas',
-      icon: <FileText className="w-5 h-5" />,
-      href: '/notes',
-      count: 12
-    },
-    {
-      title: 'Tags',
-      icon: <Tag className="w-5 h-5" />,
-      href: '/tags',
-      count: 8
-    },
-    {
-      title: 'Configurações',
-      icon: <Settings className="w-5 h-5" />,
-      href: '/settings',
-      count: null
+export default function Sidebar() {
+  const { user, theme, currentBoard, setCurrentBoard } = useStore();
+  const [boards, setBoards] = useState<Board[]>([
+    { id: '1', title: 'Projeto Principal', background_color: '#3B82F6' },
+    { id: '2', title: 'Desenvolvimento', background_color: '#10B981' },
+    { id: '3', title: 'Marketing', background_color: '#F59E0B' },
+  ]);
+  const [labels, setLabels] = useState<Label[]>([
+    { id: '1', name: 'Urgente', color: '#EF4444' },
+    { id: '2', name: 'Em Progresso', color: '#F59E0B' },
+    { id: '3', name: 'Revisão', color: '#8B5CF6' },
+    { id: '4', name: 'Concluído', color: '#10B981' },
+  ]);
+  const [showNewBoard, setShowNewBoard] = useState(false);
+  const [newBoardTitle, setNewBoardTitle] = useState('');
+  const [showMembersModal, setShowMembersModal] = useState(false);
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      // Definir primeiro board como padrão se nenhum estiver selecionado
+      if (!currentBoard && boards.length > 0) {
+        setCurrentBoard(boards[0].id);
+      }
     }
-  ];
+  }, [user, currentBoard, setCurrentBoard, boards]);
 
-  const folders = [
-    { id: '1', name: 'Todas as Notas', count: 2 },
-    { id: '2', name: 'teste', count: 0 }
-  ];
+  const createBoard = async () => {
+    if (!newBoardTitle.trim()) return;
 
-  const boards = [
-    { id: '1', name: 'Projeto Principal', count: 5 },
-    { id: '2', name: 'Backlog', count: 3 },
-    { id: '3', name: 'Em Progresso', count: 2 }
-  ];
+    const newBoard = {
+      id: `board-${Date.now()}`,
+      title: newBoardTitle,
+      background_color: '#3B82F6'
+    };
 
-  if (!isSidebarOpen) return null;
+    setBoards([newBoard, ...boards]);
+    setNewBoardTitle('');
+    setShowNewBoard(false);
+    setCurrentBoard(newBoard.id);
+  };
 
   return (
-    <aside className="w-64 bg-surface border-r border-border flex flex-col h-full">
-      {/* Header */}
-      <div className="p-6 border-b border-border">
-        <h2 className="text-lg font-semibold text-textPrimary">KrolikKanban</h2>
-      </div>
+    <>
+      <div className={`fixed left-0 top-0 h-full w-64 ${theme === 'dark' ? 'bg-slate-900' : 'bg-white'} border-r ${theme === 'dark' ? 'border-slate-800' : 'border-gray-200'} p-4 overflow-y-auto z-30`}>
+        <div className="flex items-center gap-2 mb-6">
+          <div className={`w-8 h-8 rounded-lg ${theme === 'dark' ? 'bg-blue-600' : 'bg-blue-500'} flex items-center justify-center`}>
+            <span className="text-white font-bold text-sm">K</span>
+          </div>
+          <h1 className={`text-xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>Kanban</h1>
+        </div>
 
-      {/* Navigation */}
-      <nav className="flex-1 p-4 space-y-2">
-        {navigationItems.map((item) => (
-          <a
-            key={item.href}
-            href={item.href}
-            className="flex items-center justify-between px-3 py-2 text-textSecondary hover:text-textPrimary hover:bg-surfaceHover rounded-md transition-colors group"
-          >
-            <div className="flex items-center gap-3">
-              {item.icon}
-              <span className="text-sm font-medium">{item.title}</span>
+        <div className="space-y-6">
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <h2 className={`text-sm font-medium ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>Quadros</h2>
+              <button
+                onClick={() => setShowNewBoard(true)}
+                className={`w-5 h-5 rounded ${theme === 'dark' ? 'hover:bg-slate-800' : 'hover:bg-gray-100'} flex items-center justify-center`}
+              >
+                <Plus className="w-4 h-4" />
+              </button>
             </div>
-            {item.count && (
-              <span className="text-xs bg-primary text-white px-2 py-1 rounded-full">
-                {item.count}
-              </span>
+
+            {showNewBoard && (
+              <div className="mb-2">
+                <input
+                  type="text"
+                  placeholder="Título do quadro"
+                  value={newBoardTitle}
+                  onChange={(e) => setNewBoardTitle(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && createBoard()}
+                  className={`w-full px-3 py-2 text-sm rounded-lg ${theme === 'dark' ? 'bg-slate-800 text-white' : 'bg-gray-100 text-gray-900'} border-none outline-none`}
+                  autoFocus
+                />
+                <div className="flex gap-2 mt-2">
+                  <button
+                    onClick={createBoard}
+                    className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
+                  >
+                    Criar
+                  </button>
+                  <button
+                    onClick={() => setShowNewBoard(false)}
+                    className={`px-3 py-1 text-sm rounded ${theme === 'dark' ? 'bg-slate-800 text-white hover:bg-slate-700' : 'bg-gray-100 text-gray-900 hover:bg-gray-200'}`}
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              </div>
             )}
-          </a>
-        ))}
-      </nav>
 
-      {/* Folders Section */}
-      <div className="p-4 border-t border-border">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm font-semibold text-textPrimary">Pastas</h3>
-          <button className="text-accent hover:text-accentHover text-sm">
-            <Plus className="w-4 h-4" />
-          </button>
-        </div>
-        
-        <div className="space-y-1">
-          {folders.map((folder) => (
-            <div
-              key={folder.id}
-              className="flex items-center justify-between px-3 py-2 text-textSecondary hover:text-textPrimary hover:bg-surfaceHover rounded-md transition-colors cursor-pointer"
-            >
-              <div className="flex items-center gap-3">
-                <Folder className="w-4 h-4" />
-                <span className="text-sm">{folder.name}</span>
-              </div>
-              {folder.count > 0 && (
-                <span className="text-xs bg-surfaceHover text-textSecondary px-2 py-1 rounded-full">
-                  {folder.count}
-                </span>
-              )}
+            <div className="space-y-1">
+              {boards.map((board) => (
+                <button
+                  key={board.id}
+                  onClick={() => setCurrentBoard(board.id)}
+                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left ${
+                    currentBoard === board.id
+                      ? `${theme === 'dark' ? 'bg-blue-600 text-white' : 'bg-blue-500 text-white'}`
+                      : `${theme === 'dark' ? 'hover:bg-slate-800 text-gray-300' : 'hover:bg-gray-100 text-gray-700'}`
+                  }`}
+                >
+                  <div className="w-4 h-4 rounded" style={{ backgroundColor: board.background_color }} />
+                  <span className="text-sm font-medium">{board.title}</span>
+                </button>
+              ))}
             </div>
-          ))}
+          </div>
+
+          <div>
+            <h2 className={`text-sm font-medium ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'} mb-3`}>Etiquetas</h2>
+            <div className="space-y-1">
+              {labels.map((label) => (
+                <div key={label.id} className="flex items-center gap-2 px-3 py-1">
+                  <div className="w-3 h-3 rounded-full" style={{ backgroundColor: label.color }} />
+                  <span className={`text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>{label.name}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="pt-4 border-t border-slate-800">
+            <div className="space-y-2">
+              <button className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg ${theme === 'dark' ? 'hover:bg-slate-800 text-gray-300' : 'hover:bg-gray-100 text-gray-700'}`}>
+                <Calendar className="w-4 h-4" />
+                <span className="text-sm">Calendário</span>
+              </button>
+              <button
+                onClick={() => setShowMembersModal(true)}
+                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg ${theme === 'dark' ? 'hover:bg-slate-800 text-gray-300' : 'hover:bg-gray-100 text-gray-700'}`}
+              >
+                <Users className="w-4 h-4" />
+                <span className="text-sm">Membros</span>
+              </button>
+              <button
+                onClick={() => setShowSettingsModal(true)}
+                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg ${theme === 'dark' ? 'hover:bg-slate-800 text-gray-300' : 'hover:bg-gray-100 text-gray-700'}`}
+              >
+                <Settings className="w-4 h-4" />
+                <span className="text-sm">Configurações</span>
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Boards Section */}
-      <div className="p-4 border-t border-border">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm font-semibold text-textPrimary">Boards Kanban</h3>
-          <button className="text-accent hover:text-accentHover text-sm">
-            <Plus className="w-4 h-4" />
-          </button>
-        </div>
-        
-        <div className="space-y-1">
-          {boards.map((board) => (
-            <div
-              key={board.id}
-              className={`flex items-center justify-between px-3 py-2 rounded-md transition-colors cursor-pointer ${
-                selectedBoard === board.id
-                  ? 'bg-selected text-textPrimary'
-                  : 'text-textSecondary hover:text-textPrimary hover:bg-surfaceHover'
-              }`}
-              onClick={() => setSelectedBoard(board.id)}
-            >
-              <div className="flex items-center gap-3">
-                <Kanban className="w-4 h-4" />
-                <span className="text-sm">{board.name}</span>
-              </div>
-              {board.count > 0 && (
-                <span className="text-xs bg-primary text-white px-2 py-1 rounded-full">
-                  {board.count}
-                </span>
-              )}
-            </div>
-          ))}
-        </div>
-      </div>
-    </aside>
+      <MembersModal
+        isOpen={showMembersModal}
+        onClose={() => setShowMembersModal(false)}
+        boardId={currentBoard || ''}
+      />
+
+      <SettingsModal
+        isOpen={showSettingsModal}
+        onClose={() => setShowSettingsModal(false)}
+        boardId={currentBoard || ''}
+      />
+    </>
   );
 }
