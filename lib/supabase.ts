@@ -1,9 +1,13 @@
 
 import { createClient } from '@supabase/supabase-js';
 
-// Configuração temporária - substitua pelas suas credenciais do Supabase
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://exemplo.supabase.co';
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'sua-chave-aqui';
+// Supabase configuration
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+if (!supabaseUrl || !supabaseAnonKey) {
+  throw new Error('Missing Supabase environment variables. Please check your .env.local file or Railway configuration.');
+}
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
