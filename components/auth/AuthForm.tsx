@@ -24,10 +24,22 @@ export default function AuthForm() {
     try {
       if (isLogin) {
         const { error } = await signIn(email, password);
-        if (error) throw error;
+        if (error) {
+          if (error.message === 'Supabase not configured') {
+            setError('Authentication service not configured. Please contact the administrator.');
+          } else {
+            throw error;
+          }
+        }
       } else {
         const { error } = await signUp(email, password, name);
-        if (error) throw error;
+        if (error) {
+          if (error.message === 'Supabase not configured') {
+            setError('Authentication service not configured. Please contact the administrator.');
+          } else {
+            throw error;
+          }
+        }
       }
       
       window.location.href = '/';
